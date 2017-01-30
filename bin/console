@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "sidekiq-merger"
+
+require "pry"
+Pry.start
