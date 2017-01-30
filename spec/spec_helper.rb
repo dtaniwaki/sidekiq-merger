@@ -54,13 +54,18 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 
   config.before :suite do
-    Sidekiq.logger.level = Logger::ERROR
+    Sidekiq::Testing.fake!
+    Sidekiq::Merger.logger = nil
+    Sidekiq.logger = nil
   end
 
   config.before :example do
-    Timecop.return
     Sidekiq::Merger::Redis.redis do |conn|
       conn.flushall
     end
+  end
+
+  config.after :example do
+    Timecop.return
   end
 end
