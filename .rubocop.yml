@@ -64,3 +64,27 @@ Style/ClassAndModuleChildren:
   EnforcedStyle: compact
   Exclude:
     - lib/sidekiq/merger/version.rb
+
+Rails/PluralizationGrammar:
+  Enabled: true
+
+Style/AlignArray:
+  Enabled: true
+
+Style/AlignHash:
+  Enabled: true
+
+Style/BlockEndNewline:
+  Enabled: false
+
+Style/DoubleNegation:
+  Enabled: false
+
+Metrics/AbcSize:
+  Max: 60
+
+Metrics/CyclomaticComplexity:
+  Max: 12
+
+Metrics/PerceivedComplexity:
+  Max: 12
