@@ -40,6 +40,14 @@ class YourWorker
 end
 ```
 
+## Web UI
+
+Add this line to your `config/routes.rb` to activate web UI:
+
+```ruby
+require "sidekiq/merger/web"
+```
+
 ## Contributing
 
 1. Fork it

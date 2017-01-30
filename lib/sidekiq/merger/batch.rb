@@ -6,14 +6,16 @@ class Sidekiq::Merger::Batch
     def all
       redis = Sidekiq::Merger::Redis.new
 
-      redis.all.map do |full_batch_key|
-        keys = full_batch_key.split(":")
-        raise "Invalid batch key" if keys.size < 3
-        worker_class = keys[0].camelize.constantize
-        queue = keys[1]
-        batch_key = keys[2]
-        new(worker_class, queue, batch_key, redis: redis)
-      end
+      redis.all.map { |full_batch_key| initialize_with_full_batch_key(full_batch_key, redis: redis) }
+    end
+
+    def initialize_with_full_batch_key(full_batch_key, options = {})
+      keys = full_batch_key.split(":")
+      raise "Invalid batch key" if keys.size < 3
+      worker_class = keys[0].camelize.constantize
+      queue = keys[1]
+      batch_key = keys[2]
+      new(worker_class, queue, batch_key, options)
     end
 
     def initialize_with_args(worker_class, queue, args, options = {})
@@ -78,6 +80,10 @@ class Sidekiq::Merger::Batch
 
   def full_batch_key
     @full_batch_key ||= [worker_class.name.to_s.underscore, queue, batch_key].join(":")
+  end
+
+  def all_args
+    @redis.get(full_batch_key)
   end
 
   def execution_time
