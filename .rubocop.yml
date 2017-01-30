@@ -9,3 +9,53 @@ Style/StringLiteralsInInterpolation:
   Enabled: true
   EnforcedStyle: double_quotes
 
+Style/SpaceBeforeBlockBraces:
+  Enabled: true
+  EnforcedStyle: 'space'
+
+Style/SpaceInsideBrackets:
+  Enabled: true
+
+Style/SpaceInsideHashLiteralBraces:
+  Enabled: true
+
+Style/SpaceInsideBlockBraces:
+  Enabled: true
+
+Style/SpaceAroundEqualsInParameterDefault:
+  Enabled: true
+
+Style/SpaceBeforeComma:
+  Enabled: false
+
+Style/SpaceAroundOperators:
+  Enabled: true
+
+Style/SpaceAfterComma:
+  Enabled: true
+
+Style/ExtraSpacing:
+  Enabled: true
+  AllowForAlignment: true
+
+Lint/DuplicateMethods:
+  Enabled: true
+
+Metrics/LineLength:
+  Enabled: true
+  Max: 200
+  AllowHeredoc: true
+  AllowURI: true
+  URISchemes: http, https
+
+Metrics/MethodLength:
+  Enabled: true
+  Max: 25
+
+Metrics/ClassLength:
+  Enabled: true
+  Max: 160
+
+Metrics/ModuleLength:
+  Enabled: true
+  Max: 160

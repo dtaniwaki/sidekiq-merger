@@ -13,9 +13,9 @@ Gem::Specification.new do |spec|
   spec.summary       = "Sidekiq merger plugin"
   spec.description   = "Merge sidekiq jobs."
   spec.homepage      = "https://github.com/dtaniwaki/sidekiq-merger"
-  spec.license        = "MIT"
+  spec.license = "MIT"
 
-  spec.files         = `git ls-files -z`.split("\x0").reject do |f|
+  spec.files = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
   end
   spec.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

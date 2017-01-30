@@ -3,7 +3,7 @@ require_relative "batch"
 module Sidekiq
   module Merger
     class Middleware
-      def call(worker_class, msg, queue, _redis_pool =  nil)
+      def call(worker_class, msg, queue, _redis_pool = nil)
         return yield if defined?(Sidekiq::Testing) && Sidekiq::Testing.inline?
 
         worker_class = worker_class.camelize.constantize if worker_class.is_a?(String)
