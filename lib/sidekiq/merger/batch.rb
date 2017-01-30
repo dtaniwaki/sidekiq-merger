@@ -6,29 +6,29 @@ class Sidekiq::Merger::Batch
     def all
       redis = Sidekiq::Merger::Redis.new
 
-      redis.all.map { |full_batch_key| initialize_with_full_batch_key(full_batch_key, redis: redis) }
+      redis.all.map { |full_merge_key| initialize_with_full_merge_key(full_merge_key, redis: redis) }
     end
 
-    def initialize_with_full_batch_key(full_batch_key, options = {})
-      keys = full_batch_key.split(":")
+    def initialize_with_full_merge_key(full_merge_key, options = {})
+      keys = full_merge_key.split(":")
       raise "Invalid batch key" if keys.size < 3
       worker_class = keys[0].camelize.constantize
       queue = keys[1]
-      batch_key = keys[2]
-      new(worker_class, queue, batch_key, options)
+      merge_key = keys[2]
+      new(worker_class, queue, merge_key, options)
     end
 
     def initialize_with_args(worker_class, queue, args, options = {})
-      new(worker_class, queue, batch_key(worker_class, args), options)
+      new(worker_class, queue, merge_key(worker_class, args), options)
     end
 
-    def batch_key(worker_class, args)
+    def merge_key(worker_class, args)
       options = get_options(worker_class)
-      batch_key = options["key"]
-      if batch_key.respond_to?(:call)
-        batch_key.call(args)
+      merge_key = options["key"]
+      if merge_key.respond_to?(:call)
+        merge_key.call(args)
       else
-        batch_key
+        merge_key
       end
     end
 
@@ -37,32 +37,32 @@ class Sidekiq::Merger::Batch
     end
   end
 
-  attr_reader :worker_class, :queue, :batch_key
+  attr_reader :worker_class, :queue, :merge_key
 
-  def initialize(worker_class, queue, batch_key, redis: Sidekiq::Merger::Redis.new)
+  def initialize(worker_class, queue, merge_key, redis: Sidekiq::Merger::Redis.new)
     @worker_class = worker_class
     @queue = queue
-    @batch_key = batch_key
+    @merge_key = merge_key
     @redis = redis
   end
 
   def add(args, execution_time)
-    @redis.push(full_batch_key, args, execution_time)
+    @redis.push(full_merge_key, args, execution_time)
   end
 
   def delete(args)
-    @redis.delete(full_batch_key, args)
+    @redis.delete(full_merge_key, args)
   end
 
   def size
-    @redis.batch_size(full_batch_key)
+    @redis.batch_size(full_merge_key)
   end
 
   def flush
     msgs = []
 
-    if @redis.lock(full_batch_key, Sidekiq::Merger::Config.lock_ttl)
-      msgs = @redis.pluck(full_batch_key)
+    if @redis.lock(full_merge_key, Sidekiq::Merger::Config.lock_ttl)
+      msgs = @redis.pluck(full_merge_key)
     end
 
     unless msgs.empty?
@@ -78,22 +78,22 @@ class Sidekiq::Merger::Batch
     !execution_time.nil? && execution_time < Time.now
   end
 
-  def full_batch_key
-    @full_batch_key ||= [worker_class.name.to_s.underscore, queue, batch_key].join(":")
+  def full_merge_key
+    @full_merge_key ||= [worker_class.name.to_s.underscore, queue, merge_key].join(":")
   end
 
   def all_args
-    @redis.get(full_batch_key)
+    @redis.get(full_merge_key)
   end
 
   def execution_time
-    @execution_time ||= @redis.execution_time(full_batch_key)
+    @execution_time ||= @redis.execution_time(full_merge_key)
   end
 
   def ==(other)
     self.worker_class == other.worker_class &&
     self.queue == other.queue &&
-    self.batch_key == other.batch_key
+    self.merge_key == other.merge_key
   end
 
   private

@@ -51,7 +51,7 @@ describe Sidekiq::Merger::Batch do
   end
 
   describe ".initialize_with_args" do
-    it "provides batch_key from args" do
+    it "provides merge_key from args" do
       expect(described_class).to receive(:new).with(worker_class, queue, "[1,2,3]", anything)
       described_class.initialize_with_args(worker_class, queue, [1, 2, 3])
     end
@@ -116,9 +116,9 @@ describe Sidekiq::Merger::Batch do
     end
   end
 
-  describe "#full_batch_key" do
+  describe "#full_merge_key" do
     it "returns full batch key" do
-      expect(subject.full_batch_key).to eq "name:queue:foo"
+      expect(subject.full_merge_key).to eq "name:queue:foo"
     end
   end
 end
