@@ -59,3 +59,8 @@ Metrics/ClassLength:
 Metrics/ModuleLength:
   Enabled: true
   Max: 160
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+  Exclude:
+    - lib/sidekiq/merger/version.rb
