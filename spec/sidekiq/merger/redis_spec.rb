@@ -131,7 +131,7 @@ describe Sidekiq::Merger::Redis do
       subject.push("bar", [2, 3, 4], execution_time)
     end
     it "plucks all the args" do
-      expect(subject.pluck("bar")).to eq [[1, 2, 3], [2, 3, 4]]
+      expect(subject.pluck("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
     end
   end
 

@@ -87,7 +87,7 @@ describe Sidekiq::Merger::Merge do
       expect(Sidekiq::Client).to receive(:push).with(
         "class" => worker_class,
         "queue" => queue,
-        "args" => [[1, 2, 3], [2, 3, 4]]
+        "args" => a_collection_containing_exactly([1, 2, 3], [2, 3, 4])
       )
 
       subject.flush

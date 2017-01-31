@@ -36,7 +36,7 @@ describe Sidekiq::Merger::Middleware do
       expect(worker_class.jobs.size).to eq 1
       job = worker_class.jobs[0]
       expect(job["queue"]).to eq queue
-      expect(job["args"]).to eq [[1, 2, 3], [2, 3, 4]]
+      expect(job["args"]).to contain_exactly [1, 2, 3], [2, 3, 4]
     end
     context "without at msg" do
       it "does not add the args to the merge" do
