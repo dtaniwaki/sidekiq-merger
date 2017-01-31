@@ -37,7 +37,7 @@ describe Sidekiq::Merger::Redis do
     it "sets the execution time" do
       subject.push("foo", [1, 2, 3], execution_time)
       described_class.redis do |conn|
-        expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_json
+        expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
       end
     end
 
@@ -57,7 +57,7 @@ describe Sidekiq::Merger::Redis do
       it "does not update the execution time" do
         subject.push("foo", [2, 3, 4], execution_time + 1.hour)
         described_class.redis do |conn|
-          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_json
+          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
         end
       end
     end
@@ -78,7 +78,7 @@ describe Sidekiq::Merger::Redis do
       it "does not update the execution time" do
         subject.push("foo", [1, 2, 3], execution_time + 1.hour)
         described_class.redis do |conn|
-          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_json
+          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
         end
       end
     end
@@ -100,8 +100,8 @@ describe Sidekiq::Merger::Redis do
       it "sets the execution time" do
         subject.push("bar", [2, 3, 4], execution_time + 1.hour)
         described_class.redis do |conn|
-          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_json
-          expect(conn.get("sidekiq-merger:time:bar")).to eq (execution_time + 1.hour).to_json
+          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
+          expect(conn.get("sidekiq-merger:time:bar")).to eq (execution_time + 1.hour).to_i.to_s
         end
       end
     end
