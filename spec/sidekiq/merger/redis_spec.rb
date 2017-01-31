@@ -26,10 +26,10 @@ describe Sidekiq::Merger::Redis do
     end
   end
 
-  describe "#push" do
-    shared_examples_for "push spec" do
+  describe "#push_message" do
+    shared_examples_for "push_message spec" do
       it "pushes the msg" do
-        subject.push(pushing_key, pushing_msg, pushing_execution_time)
+        subject.push_message(pushing_key, pushing_msg, pushing_execution_time)
         described_class.redis do |conn|
           expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly(*merge_keys)
           expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly(*times.keys)
@@ -44,7 +44,7 @@ describe Sidekiq::Merger::Redis do
         end
       end
       it "sets the execution time" do
-        subject.push(pushing_key, pushing_msg, pushing_execution_time)
+        subject.push_message(pushing_key, pushing_msg, pushing_execution_time)
         described_class.redis do |conn|
           merge_keys.each do |key, time|
             expect(conn.get(key)).to eq time
@@ -57,7 +57,7 @@ describe Sidekiq::Merger::Redis do
     let(:pushing_msg) { [1, 2, 3] }
     let(:pushing_execution_time) { execution_time }
 
-    include_examples "push spec" do
+    include_examples "push_message spec" do
       let(:merge_keys) { ["foo"] }
       let(:times) { {
         "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
@@ -72,8 +72,8 @@ describe Sidekiq::Merger::Redis do
 
     context "the merge key already exists" do
       let(:pushing_msg) { [2, 3, 4] }
-      before { subject.push("foo", [1, 2, 3], execution_time) }
-      include_examples "push spec" do
+      before { subject.push_message("foo", [1, 2, 3], execution_time) }
+      include_examples "push_message spec" do
         let(:merge_keys) { ["foo"] }
         let(:times) { {
           "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
@@ -88,8 +88,8 @@ describe Sidekiq::Merger::Redis do
     end
 
     context "the msg has already ben pushed" do
-      before { subject.push("foo", [1, 2, 3], execution_time) }
-      include_examples "push spec" do
+      before { subject.push_message("foo", [1, 2, 3], execution_time) }
+      include_examples "push_message spec" do
         let(:merge_keys) { ["foo"] }
         let(:times) { {
           "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
@@ -107,8 +107,8 @@ describe Sidekiq::Merger::Redis do
       let(:pushing_key) { "bar" }
       let(:pushing_msg) { [2, 3, 4] }
       let(:pushing_execution_time) { execution_time + 1.hour }
-      before { subject.push("foo", [1, 2, 3], execution_time) }
-      include_examples "push spec" do
+      before { subject.push_message("foo", [1, 2, 3], execution_time) }
+      include_examples "push_message spec" do
         let(:merge_keys) { ["foo", "bar"] }
         let(:times) { {
           "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
@@ -126,7 +126,7 @@ describe Sidekiq::Merger::Redis do
     end
   end
 
-  describe "#delete" do
+  describe "#delete_message" do
     before do
       subject.redis do |conn|
         conn.sadd("sidekiq-merger:unique_msg:foo", "[1,2,3]")
@@ -136,7 +136,7 @@ describe Sidekiq::Merger::Redis do
       end
     end
     it "deletes the msg" do
-      subject.delete("foo", [1, 2, 3])
+      subject.delete_message("foo", [1, 2, 3])
       subject.redis do |conn|
         expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[2,3,4]"
         expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[2,3,4]"
@@ -147,7 +147,7 @@ describe Sidekiq::Merger::Redis do
         subject.redis do |conn|
           conn.lpush("sidekiq-merger:msg:foo", "[1,2,3]")
         end
-        subject.delete("foo", [1, 2, 3])
+        subject.delete_message("foo", [1, 2, 3])
         subject.redis do |conn|
           expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[2,3,4]"
           expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[2,3,4]"
@@ -156,7 +156,7 @@ describe Sidekiq::Merger::Redis do
     end
   end
 
-  describe "#size" do
+  describe "#merge_size" do
     before do
       subject.redis do |conn|
         conn.lpush("sidekiq-merger:msg:foo", "[1,2,3]")
@@ -164,74 +164,74 @@ describe Sidekiq::Merger::Redis do
       end
     end
     it "returns the size" do
-      expect(subject.size("foo")).to eq 2
+      expect(subject.merge_size("foo")).to eq 2
     end
   end
 
-  describe "#exists?" do
+  describe "#merge_exists?" do
     context "unique key exists" do
       it "returns true" do
         described_class.redis { |conn| conn.sadd("sidekiq-merger:unique_msg:foo", "\"test\"") }
-        expect(subject.exists?("foo", "test")).to eq true
+        expect(subject.merge_exists?("foo", "test")).to eq true
       end
     end
     context "unique key does not exists" do
       it "returns false" do
-        expect(subject.exists?("foo", "test")).to eq false
+        expect(subject.merge_exists?("foo", "test")).to eq false
       end
     end
   end
 
-  describe "#all" do
+  describe "#all_merges" do
     before do
-      subject.push("foo", [1, 2, 3], execution_time)
-      subject.push("bar", [2, 3, 4], execution_time)
+      subject.push_message("foo", [1, 2, 3], execution_time)
+      subject.push_message("bar", [2, 3, 4], execution_time)
     end
-    it "gets all the msg" do
-      expect(subject.all).to contain_exactly "foo", "bar"
+    it "gets all the merges" do
+      expect(subject.all_merges).to contain_exactly "foo", "bar"
     end
   end
 
-  describe "#lock" do
+  describe "#lock_merge" do
     it "locks the key" do
-      subject.lock("foo", 3)
+      subject.lock_merge("foo", 3)
       subject.redis do |conn|
         expect(conn.exists("sidekiq-merger:lock:foo")).to eq true
       end
     end
   end
 
-  describe "#get" do
+  describe "#get_merge" do
     before do
-      subject.push("bar", [1, 2, 3], execution_time)
-      subject.push("bar", [2, 3, 4], execution_time)
+      subject.push_message("bar", [1, 2, 3], execution_time)
+      subject.push_message("bar", [2, 3, 4], execution_time)
     end
     it "gets all the msg" do
-      expect(subject.get("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
-      expect(subject.size("bar")).to eq 2
+      expect(subject.get_merge("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
+      expect(subject.merge_size("bar")).to eq 2
     end
   end
 
-  describe "#pluck" do
+  describe "#pluck_merge" do
     before do
-      subject.push("bar", [1, 2, 3], execution_time)
-      subject.push("bar", [2, 3, 4], execution_time)
+      subject.push_message("bar", [1, 2, 3], execution_time)
+      subject.push_message("bar", [2, 3, 4], execution_time)
     end
     it "plucks all the msg" do
-      expect(subject.pluck("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
-      expect(subject.size("bar")).to eq 0
+      expect(subject.pluck_merge("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
+      expect(subject.merge_size("bar")).to eq 0
     end
   end
 
-  describe "#delete_key" do
+  describe "#delete_merge" do
     before do
-      subject.push("foo", [1, 2, 3], execution_time)
-      subject.push("foo", [1, 2, 3], execution_time)
+      subject.push_message("foo", [1, 2, 3], execution_time)
+      subject.push_message("foo", [1, 2, 3], execution_time)
     end
-    it "deletes all the keys" do
+    it "deletes the merge" do
       expect {
-        subject.delete_key("foo")
-      }.to change { subject.size("foo") }.from(2).to(0)
+        subject.delete_merge("foo")
+      }.to change { subject.merge_size("foo") }.from(2).to(0)
     end
   end
 end

@@ -6,7 +6,7 @@ class Sidekiq::Merger::Merge
     def all
       redis = Sidekiq::Merger::Redis.new
 
-      redis.all.map { |full_merge_key| initialize_with_full_merge_key(full_merge_key, redis: redis) }
+      redis.all_merges.map { |full_merge_key| initialize_with_full_merge_key(full_merge_key, redis: redis) }
     end
 
     def initialize_with_full_merge_key(full_merge_key, options = {})
@@ -47,28 +47,28 @@ class Sidekiq::Merger::Merge
   end
 
   def add(args, execution_time)
-    if !options[:unique] || !@redis.exists?(full_merge_key, args)
-      @redis.push(full_merge_key, args, execution_time)
+    if !options[:unique] || !@redis.merge_exists?(full_merge_key, args)
+      @redis.push_message(full_merge_key, args, execution_time)
     end
   end
 
   def delete(args)
-    @redis.delete(full_merge_key, args)
+    @redis.delete_message(full_merge_key, args)
   end
 
   def delete_all
-    @redis.delete_all(full_merge_key)
+    @redis.delete_merge(full_merge_key)
   end
 
   def size
-    @redis.size(full_merge_key)
+    @redis.merge_size(full_merge_key)
   end
 
   def flush
     msgs = []
 
-    if @redis.lock(full_merge_key, Sidekiq::Merger::Config.lock_ttl)
-      msgs = @redis.pluck(full_merge_key)
+    if @redis.lock_merge(full_merge_key, Sidekiq::Merger::Config.lock_ttl)
+      msgs = @redis.pluck_merge(full_merge_key)
     end
 
     unless msgs.empty?
@@ -90,11 +90,11 @@ class Sidekiq::Merger::Merge
   end
 
   def all_args
-    @redis.get(full_merge_key)
+    @redis.get_merge(full_merge_key)
   end
 
   def execution_time
-    @execution_time ||= @redis.execution_time(full_merge_key)
+    @execution_time ||= @redis.merge_execution_time(full_merge_key)
   end
 
   def ==(other)

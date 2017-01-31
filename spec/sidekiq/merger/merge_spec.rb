@@ -63,19 +63,19 @@ describe Sidekiq::Merger::Merge do
 
   describe "#add" do
     it "adds the args in lazy merge" do
-      expect(redis).to receive(:push).with("name:queue:foo", [1, 2, 3], execution_time)
+      expect(redis).to receive(:push_message).with("name:queue:foo", [1, 2, 3], execution_time)
       subject.add([1, 2, 3], execution_time)
     end
     context "with unique option" do
       let(:options) { { key: -> (args) { args.to_json }, unique: true } }
       it "adds the args in lazy merge" do
-        expect(redis).to receive(:push).with("name:queue:foo", [1, 2, 3], execution_time)
+        expect(redis).to receive(:push_message).with("name:queue:foo", [1, 2, 3], execution_time)
         subject.add([1, 2, 3], execution_time)
       end
       context "the args has alredy been added" do
         before { subject.add([1, 2, 3], execution_time) }
         it "adds the args in lazy merge" do
-          expect(redis).not_to receive(:push)
+          expect(redis).not_to receive(:push_message)
           subject.add([1, 2, 3], execution_time)
         end
       end
@@ -84,7 +84,7 @@ describe Sidekiq::Merger::Merge do
 
   describe "#delete" do
     it "adds the args in lazy merge" do
-      expect(redis).to receive(:delete).with("name:queue:foo", [1, 2, 3])
+      expect(redis).to receive(:delete_message).with("name:queue:foo", [1, 2, 3])
       subject.delete([1, 2, 3])
     end
   end

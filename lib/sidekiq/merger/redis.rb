@@ -42,7 +42,7 @@ class Sidekiq::Merger::Redis
     end
   end
 
-  def push(key, msg, execution_time)
+  def push_message(key, msg, execution_time)
     msg_json = msg.to_json
     redis do |conn|
       conn.multi do
@@ -54,7 +54,7 @@ class Sidekiq::Merger::Redis
     end
   end
 
-  def delete(key, msg)
+  def delete_message(key, msg)
     msg_json = msg.to_json
     redis do |conn|
       conn.multi do
@@ -64,37 +64,37 @@ class Sidekiq::Merger::Redis
     end
   end
 
-  def execution_time(key)
+  def merge_execution_time(key)
     redis do |conn|
       t = conn.get(time_key(key))
       Time.at(t.to_i) unless t.nil?
     end
   end
 
-  def size(key)
+  def merge_size(key)
     redis { |conn| conn.llen(msg_key(key)) }
   end
 
-  def exists?(key, msg)
+  def merge_exists?(key, msg)
     msg_json = msg.to_json
     redis { |conn| conn.sismember(unique_msg_key(key), msg_json) }
   end
 
-  def all
+  def all_merges
     redis { |conn| conn.smembers(merges_key) }
   end
 
-  def lock(key, ttl)
+  def lock_merge(key, ttl)
     redis { |conn| conn.set(lock_key(key), true, nx: true, ex: ttl) }
   end
 
-  def get(key)
+  def get_merge(key)
     msgs = []
     redis { |conn| msgs = conn.lrange(msg_key(key), 0, -1) }
     msgs.map { |msg| JSON.parse(msg) }
   end
 
-  def pluck(key)
+  def pluck_merge(key)
     msgs = []
     redis do |conn|
       conn.multi do
@@ -108,7 +108,7 @@ class Sidekiq::Merger::Redis
     extract_future_value(msgs).map { |msg| JSON.parse(msg) }
   end
 
-  def delete_key(key)
+  def delete_merge(key)
     redis do |conn|
       conn.multi do
         conn.del(unique_msg_key(key))
