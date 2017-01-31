@@ -7,6 +7,8 @@ require_relative "merger/flusher"
 require_relative "merger/logging_observer"
 
 module Sidekiq::Merger
+  LOGGER_TAG = self.name.freeze
+
   class << self
     attr_accessor :logger
 
@@ -19,7 +21,7 @@ module Sidekiq::Merger
       ) { flusher.flush }
       task.add_observer(observer)
       logger.info(
-        "[Sidekiq::Merger] Started polling merges every #{interval} seconds"
+        "[#{Sidekiq::Merger::LOGGER_TAG}] Started polling merges every #{interval} seconds"
       )
       task.execute
     end

@@ -6,11 +6,11 @@ class Sidekiq::Merger::LoggingObserver
   def update(time, _result, ex)
     if ex.is_a?(Concurrent::TimeoutError)
       @logger.error(
-        "[Sidekiq::Merger] Execution timed out\n"
+        "[#{Sidekiq::Merger::LOGGER_TAG}] Execution timed out\n"
       )
     elsif ex.present?
       @logger.error(
-        "[Sidekiq::Merger] Execution failed with error #{ex}\n"
+        "[#{Sidekiq::Merger::LOGGER_TAG}] Execution failed with error #{ex}\n"
       )
     end
   end
