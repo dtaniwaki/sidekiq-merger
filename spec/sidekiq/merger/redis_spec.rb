@@ -189,6 +189,14 @@ describe Sidekiq::Merger::Redis do
   end
 
   describe "#get" do
+    before do
+      subject.push("bar", [1, 2, 3], execution_time)
+      subject.push("bar", [2, 3, 4], execution_time)
+    end
+    it "gets all the msg" do
+      expect(subject.get("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
+      expect(subject.size("bar")).to eq 2
+    end
   end
 
   describe "#pluck" do
@@ -198,6 +206,7 @@ describe Sidekiq::Merger::Redis do
     end
     it "plucks all the msg" do
       expect(subject.pluck("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
+      expect(subject.size("bar")).to eq 0
     end
   end
 
