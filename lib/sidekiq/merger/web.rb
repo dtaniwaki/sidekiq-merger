@@ -6,7 +6,7 @@ module Sidekiq::Merger::Web
   def self.registered(app)
     app.get "/merger" do
       @merges = Sidekiq::Merger::Merge.all
-      erb File.read(File.join(VIEWS, "index.html.erb")), locals: { view_path: VIEWS }
+      erb File.read(File.join(VIEWS, "index.erb")), locals: { view_path: VIEWS }
     end
 
     app.post "/merger/:full_merge_key/delete" do
