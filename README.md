@@ -6,7 +6,7 @@
 [![Coverage Status][cov-image]][cov-link]
 [![Code Climate][gpa-image]][gpa-link]
 
-Merge sidekiq jobs occurring within specific period.
+Merge sidekiq jobs occurring within specific period. This sidekiq middleware is inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
 
 ## Installation
 
