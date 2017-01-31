@@ -13,12 +13,16 @@ class Sidekiq::Merger::Redis
           end
           return true
         SCRIPT
-        conn.eval(script, [], [merges_key, msg_key("*"), lock_key("*")])
+        conn.eval(script, [], [merges_key, unique_msg_key("*"), msg_key("*"), lock_key("*")])
       end
     end
 
     def merges_key
       "#{KEY_PREFIX}:merges"
+    end
+
+    def unique_msg_key(key)
+      "#{KEY_PREFIX}:unique_msg:#{key}"
     end
 
     def msg_key(key)
@@ -38,18 +42,26 @@ class Sidekiq::Merger::Redis
     end
   end
 
-  def push(key, msg, execution_time)
+  def push(key, msg, execution_time, unique: false)
+    msg_json = msg.to_json
     redis do |conn|
       conn.multi do
         conn.sadd(merges_key, key)
         conn.setnx(time_key(key), execution_time.to_i)
-        conn.sadd(msg_key(key), msg.to_json)
+        conn.sadd(unique_msg_key(key), msg_json)
+        conn.lpush(msg_key(key), msg_json) if !unique || !conn.sismember(unique_msg_key(key), msg_json)
       end
     end
   end
 
   def delete(key, msg)
-    redis { |conn| conn.srem(msg_key(key), msg.to_json) }
+    msg_json = msg.to_json
+    redis do |conn|
+      conn.multi do
+        conn.srem(unique_msg_key(key), msg_json)
+        conn.lrem(msg_key(key), msg_json)
+      end
+    end
   end
 
   def execution_time(key)
@@ -60,11 +72,12 @@ class Sidekiq::Merger::Redis
   end
 
   def merge_size(key)
-    redis { |conn| conn.scard(msg_key(key)) }
+    redis { |conn| conn.llen(msg_key(key)) }
   end
 
   def exists?(key, msg)
-    redis { |conn| conn.sismember(msg_key(key), msg.to_json) }
+    msg_json = msg.to_json
+    redis { |conn| conn.sismember(unique_msg_key(key), msg_json) }
   end
 
   def all
@@ -77,33 +90,44 @@ class Sidekiq::Merger::Redis
 
   def get(key)
     msgs = []
-    redis do |conn|
-      msgs = conn.smembers(msg_key(key))
-    end
+    redis { |conn| msgs = conn.lrange(msg_key(key), 0, -1) }
     msgs.map { |msg| JSON.parse(msg) }
   end
 
   def pluck(key)
     msgs = []
     redis do |conn|
-      msgs = conn.smembers(msg_key(key))
-      conn.del(msg_key(key))
-      conn.del(time_key(key))
-      conn.srem(merges_key, key)
+      conn.multi do
+        msgs = conn.lrange(msg_key(key), 0, -1)
+        conn.del(unique_msg_key(key))
+        conn.del(msg_key(key))
+        conn.del(time_key(key))
+        conn.srem(merges_key, key)
+      end
     end
-    msgs.map { |msg| JSON.parse(msg) }
+    extract_future_value(msgs).map { |msg| JSON.parse(msg) }
   end
 
   def delete_all(key)
     redis do |conn|
-      conn.del(msg_key(key))
-      conn.del(time_key(key))
-      conn.del(lock_key(key))
-      conn.srem(merges_key, key)
+      conn.multi do
+        conn.del(unique_msg_key(key))
+        conn.del(msg_key(key))
+        conn.del(time_key(key))
+        conn.del(lock_key(key))
+        conn.srem(merges_key, key)
+      end
     end
   end
 
   private
 
-  delegate :merges_key, :msg_key, :time_key, :lock_key, :redis, to: "self.class"
+  delegate :merges_key, :msg_key, :unique_msg_key, :time_key, :lock_key, :redis, to: "self.class"
+
+  def extract_future_value(future)
+    while future.value.is_a?(Redis::FutureNotReady)
+      sleep(0.001)
+    end
+    future.value
+  end
 end

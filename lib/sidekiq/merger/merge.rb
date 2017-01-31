@@ -47,7 +47,7 @@ class Sidekiq::Merger::Merge
   end
 
   def add(args, execution_time)
-    @redis.push(full_merge_key, args, execution_time)
+    @redis.push(full_merge_key, args, execution_time, unique: !!options[:unique])
   end
 
   def delete(args)

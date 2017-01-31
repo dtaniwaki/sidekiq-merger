@@ -10,6 +10,7 @@ describe Sidekiq::Merger::Redis do
     it "cleans up all the keys" do
       described_class.redis do |conn|
         conn.sadd("sidekiq-merger:merges", "test")
+        conn.set("sidekiq-merger:unique_msg:foo", "test")
         conn.set("sidekiq-merger:msg:foo", "test")
         conn.set("sidekiq-merger:lock:foo", "test")
       end
@@ -18,6 +19,7 @@ describe Sidekiq::Merger::Redis do
 
       described_class.redis do |conn|
         expect(conn.smembers("sidekiq-merger:merges")).to be_empty
+        expect(conn.keys("sidekiq-merger:unique_msg:*")).to be_empty
         expect(conn.keys("sidekiq-merger:msg:*")).to be_empty
         expect(conn.keys("sidekiq-merger:lock:*")).to be_empty
       end
@@ -30,8 +32,10 @@ describe Sidekiq::Merger::Redis do
       described_class.redis do |conn|
         expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
         expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
+        expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
+        expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
         expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
-        expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]"
+        expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]"
       end
     end
     it "sets the execution time" do
@@ -50,8 +54,10 @@ describe Sidekiq::Merger::Redis do
         described_class.redis do |conn|
           expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
           expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
+          expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
+          expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]", "[2,3,4]"
           expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
-          expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]", "[2,3,4]"
+          expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]", "[2,3,4]"
         end
       end
       it "does not update the execution time" do
@@ -66,19 +72,40 @@ describe Sidekiq::Merger::Redis do
       before do
         subject.push("foo", [1, 2, 3], execution_time)
       end
-      it "does not push the args" do
+      it "pushes the args" do
         subject.push("foo", [1, 2, 3], execution_time + 1.hour)
         described_class.redis do |conn|
           expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
           expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
+          expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
+          expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
           expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
-          expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]"
+          expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]", "[1,2,3]"
         end
       end
       it "does not update the execution time" do
         subject.push("foo", [1, 2, 3], execution_time + 1.hour)
         described_class.redis do |conn|
           expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
+        end
+      end
+      context "with unique option" do
+        it "does not push the args" do
+          subject.push("foo", [1, 2, 3], execution_time + 1.hour, unique: true)
+          described_class.redis do |conn|
+            expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
+            expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
+            expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
+            expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
+            expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
+            expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]"
+          end
+        end
+        it "does not update the execution time" do
+          subject.push("foo", [1, 2, 3], execution_time + 1.hour, unique: true)
+          described_class.redis do |conn|
+            expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
+          end
         end
       end
     end
@@ -92,9 +119,12 @@ describe Sidekiq::Merger::Redis do
         described_class.redis do |conn|
           expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo", "bar"
           expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo", "sidekiq-merger:time:bar"
+          expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo", "sidekiq-merger:unique_msg:bar"
+          expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
+          expect(conn.smembers("sidekiq-merger:unique_msg:bar")).to contain_exactly "[2,3,4]"
           expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo", "sidekiq-merger:msg:bar"
-          expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]"
-          expect(conn.smembers("sidekiq-merger:msg:bar")).to contain_exactly "[2,3,4]"
+          expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]"
+          expect(conn.lrange("sidekiq-merger:msg:bar", 0, -1)).to contain_exactly "[2,3,4]"
         end
       end
       it "sets the execution time" do
