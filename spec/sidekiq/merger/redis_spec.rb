@@ -28,7 +28,7 @@ describe Sidekiq::Merger::Redis do
 
   describe "#push" do
     shared_examples_for "push spec" do
-      it "pushes the args" do
+      it "pushes the msg" do
         subject.push(pushing_key, pushing_msg, pushing_execution_time)
         described_class.redis do |conn|
           expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly(*merge_keys)
@@ -87,7 +87,7 @@ describe Sidekiq::Merger::Redis do
       end
     end
 
-    context "the args has already ben pushed" do
+    context "the msg has already ben pushed" do
       before { subject.push("foo", [1, 2, 3], execution_time) }
       include_examples "push spec" do
         let(:merge_keys) { ["foo"] }
@@ -160,7 +160,7 @@ describe Sidekiq::Merger::Redis do
       subject.push("bar", [1, 2, 3], execution_time)
       subject.push("bar", [2, 3, 4], execution_time)
     end
-    it "plucks all the args" do
+    it "plucks all the msg" do
       expect(subject.pluck("bar")).to contain_exactly [1, 2, 3], [2, 3, 4]
     end
   end
