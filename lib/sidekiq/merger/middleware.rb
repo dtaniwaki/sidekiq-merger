@@ -11,6 +11,7 @@ class Sidekiq::Merger::Middleware
       Sidekiq::Merger::Batch
         .initialize_with_args(worker_class, queue, msg["args"])
         .add(msg["args"], msg["at"])
+      false
     else
       yield
     end
