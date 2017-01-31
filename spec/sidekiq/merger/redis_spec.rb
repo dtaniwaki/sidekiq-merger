@@ -217,6 +217,15 @@ describe Sidekiq::Merger::Redis do
     end
   end
 
-  describe "#delete_all" do
+  describe "#delete_key" do
+    before do
+      subject.push("foo", [1, 2, 3], execution_time)
+      subject.push("foo", [1, 2, 3], execution_time)
+    end
+    it "deletes all the keys" do
+      expect {
+        subject.delete_key("foo")
+      }.to change { subject.size("foo") }.from(2).to(0)
+    end
   end
 end

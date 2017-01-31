@@ -108,7 +108,7 @@ class Sidekiq::Merger::Redis
     extract_future_value(msgs).map { |msg| JSON.parse(msg) }
   end
 
-  def delete_all(key)
+  def delete_key(key)
     redis do |conn|
       conn.multi do
         conn.del(unique_msg_key(key))
