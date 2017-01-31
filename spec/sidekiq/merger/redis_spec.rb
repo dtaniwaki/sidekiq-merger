@@ -183,6 +183,13 @@ describe Sidekiq::Merger::Redis do
   end
 
   describe "#all" do
+    before do
+      subject.push("foo", [1, 2, 3], execution_time)
+      subject.push("bar", [2, 3, 4], execution_time)
+    end
+    it "gets all the msg" do
+      expect(subject.all).to contain_exactly "foo", "bar"
+    end
   end
 
   describe "#lock" do
