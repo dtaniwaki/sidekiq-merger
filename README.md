@@ -65,6 +65,14 @@ SomeWorker.perform_async 5
 
 In this case, `SomeWorker` will be executed 3 times with args of `[4]`, `[3]` and `[5]`.
 
+### Quick Check
+
+Run docker containers to check the behavior of this gem.
+
+    $ docker-compose up
+
+Then, open `http://localhost:3000/`. You can push jobs from the UI and see what happens in the sidekiq console.
+
 ## Options
 
 ### `key` (optional, default: `nil`)
@@ -98,12 +106,6 @@ require "sidekiq/merger/web"
     $ bundle exec rspec
 
 The test coverage is available at `./coverage/index.html`.
-
-To check the behavior of this plugin, you can run docker containers.
-
-    $ docker-compose up
-
-Then, open `http://localhost:3000/`.
 
 ## Lint
 
