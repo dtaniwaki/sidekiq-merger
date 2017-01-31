@@ -62,14 +62,14 @@ In this case, `SomeWorker` will be executed 3 times with args of `[4]`, `[3]` an
 
 ## Options
 
-### `key` (default: arguments)
+### `key` (optional, default: `nil`)
 
 Defines merge key so different arguments can be merged.
 
-Format: `string` or `proc`
+Format: `String` or `Proc`
 e.g. `sidekiq_options merger: { key: -> (args) { args[0..1] } }`
 
-### `unique` (default: `false`)
+### `unique` (optional, default: `false`)
 
 Prevents enqueue of jobs with identical arguments.
 
