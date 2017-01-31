@@ -7,7 +7,9 @@ class Sidekiq::Merger::Middleware
     worker_class = worker_class.camelize.constantize if worker_class.is_a?(String)
     options = worker_class.get_sidekiq_options
 
-    if !msg["at"].nil? && options.key?("merger")
+    merger_enabled = options.key?("merger")
+
+    if merger_enabled && !msg["at"].nil? && msg["at"] > Time.now
       Sidekiq::Merger::Merge
         .initialize_with_args(worker_class, queue, msg["args"])
         .add(msg["args"], msg["at"])

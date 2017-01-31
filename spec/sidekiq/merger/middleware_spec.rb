@@ -23,6 +23,7 @@ describe Sidekiq::Merger::Middleware do
   end
   before :example do
     allow(Object).to receive(:const_get).with("Name").and_return worker_class
+    Timecop.freeze(now)
   end
 
   describe "#call" do
@@ -50,6 +51,13 @@ describe Sidekiq::Merger::Middleware do
           flusher.flush
           expect(worker_class.jobs.size).to eq 0
         end
+      end
+    end
+    context "at is before current time" do
+      it "peforms now" do
+        expect { |b| subject.call(worker_class, { "args" => [1, 2, 3], "at" => now }, queue, &b) }.to yield_with_args(worker_class, { "args" => [[1, 2, 3]], "at" => now }, queue, anything)
+        flusher.flush
+        expect(worker_class.jobs.size).to eq 0
       end
     end
   end
