@@ -1,23 +1,26 @@
 version: '2.1'
 services:
-  app:
-    build: .
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
   worker:
     extends:
+      file: 'docker-compose-common.yml'
       service: app
     command: bundle exec sidekiq -r ./sidekiq.rb
     links:
       - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
   web:
     extends:
+      file: 'docker-compose-common.yml'
       service: app
     command: bundle exec rackup -p 3000 --host 0.0.0.0
     ports:
       - 3000:3000
     links:
       - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
   redis:
     image: redis:latest

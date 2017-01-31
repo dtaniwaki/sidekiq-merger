@@ -1,0 +1,7 @@
+version: '2.1'
+services:
+  app:
+    build: .
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
