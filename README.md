@@ -18,11 +18,11 @@ gem 'sidekiq-merger'
 
 And then execute:
 
-  $ bundle
+    $ bundle
 
 Or install it yourself as:
 
-  $ gem install sidekiq-merger
+    $ gem install sidekiq-merger
 
 ## Usage
 
@@ -93,19 +93,19 @@ require "sidekiq/merger/web"
 
 ## Test
 
-  $ bundle exec rspec
+    $ bundle exec rspec
 
 The test coverage is available at `./coverage/index.html`.
 
 To check the behavior of this plugin, you can run docker containers.
 
-  $ docker-compose up
+    $ docker-compose up
 
 Then, open `http://localhost:3000/`.
 
 ## Lint
 
-  $ bundle exec rubocop
+    $ bundle exec rubocop
 
 ## Contributing
 
