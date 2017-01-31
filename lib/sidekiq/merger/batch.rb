@@ -54,6 +54,10 @@ class Sidekiq::Merger::Batch
     @redis.delete(full_merge_key, args)
   end
 
+  def delete_all
+    @redis.delete_all(full_merge_key)
+  end
+
   def size
     @redis.batch_size(full_merge_key)
   end
