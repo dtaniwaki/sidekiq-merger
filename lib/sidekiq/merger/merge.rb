@@ -61,7 +61,7 @@ class Sidekiq::Merger::Merge
   end
 
   def size
-    @redis.merge_size(full_merge_key)
+    @redis.size(full_merge_key)
   end
 
   def flush

@@ -71,7 +71,7 @@ class Sidekiq::Merger::Redis
     end
   end
 
-  def merge_size(key)
+  def size(key)
     redis { |conn| conn.llen(msg_key(key)) }
   end
 

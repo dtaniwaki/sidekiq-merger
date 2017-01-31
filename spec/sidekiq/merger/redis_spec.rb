@@ -156,7 +156,16 @@ describe Sidekiq::Merger::Redis do
     end
   end
 
-  describe "#merge_size" do
+  describe "#size" do
+    before do
+      subject.redis do |conn|
+        conn.lpush("sidekiq-merger:msg:foo", "[1,2,3]")
+        conn.lpush("sidekiq-merger:msg:foo", "[2,3,4]")
+      end
+    end
+    it "returns the size" do
+      expect(subject.size("foo")).to eq 2
+    end
   end
 
   describe "#exists?" do
