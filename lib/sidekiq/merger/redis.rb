@@ -42,7 +42,7 @@ class Sidekiq::Merger::Redis
     redis do |conn|
       conn.multi do
         conn.sadd(batches_key, key)
-        conn.setnx(time_key(key), execution_time.to_json)
+        conn.setnx(time_key(key), execution_time.to_i)
         conn.sadd(msg_key(key), msg.to_json)
       end
     end
@@ -53,7 +53,7 @@ class Sidekiq::Merger::Redis
   end
 
   def execution_time(key)
-    redis { |conn| Time.parse(conn.get(time_key(key))) rescue nil }
+    redis { |conn| Time.at(conn.get(time_key(key)).to_i) rescue nil }
   end
 
   def batch_size(key)
