@@ -28,8 +28,8 @@ describe Sidekiq::Merger::Middleware do
 
   describe "#call" do
     it "adds the args to the merge" do
-      subject.call(worker_class, { "args" => [1, 2, 3], "at" => now + 10.seconds }, queue) {}
-      subject.call(worker_class, { "args" => [2, 3, 4], "at" => now + 15.seconds }, queue) {}
+      subject.call(worker_class, { "args" => [1, 2, 3], "at" => (now + 10.seconds).to_f }, queue) {}
+      subject.call(worker_class, { "args" => [2, 3, 4], "at" => (now + 15.seconds).to_f }, queue) {}
       flusher.flush
       expect(worker_class.jobs.size).to eq 0
       Timecop.travel(10.seconds)
@@ -55,7 +55,7 @@ describe Sidekiq::Merger::Middleware do
     end
     context "at is before current time" do
       it "peforms now" do
-        expect { |b| subject.call(worker_class, { "args" => [1, 2, 3], "at" => now }, queue, &b) }.to yield_with_args(worker_class, { "args" => [[1, 2, 3]], "at" => now }, queue, anything)
+        expect { |b| subject.call(worker_class, { "args" => [1, 2, 3], "at" => now.to_f }, queue, &b) }.to yield_with_args(worker_class, { "args" => [[1, 2, 3]], "at" => now.to_f }, queue, anything)
         flusher.flush
         expect(worker_class.jobs.size).to eq 0
       end
