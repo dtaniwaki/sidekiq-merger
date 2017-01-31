@@ -1,0 +1,6 @@
+source "https://rubygems.org"
+
+gem "sinatra"
+gem "sidekiq"
+
+gem "sidekiq-merger", path: "../"

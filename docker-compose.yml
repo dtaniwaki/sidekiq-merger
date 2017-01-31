@@ -1,0 +1,24 @@
+version: '2'
+services:
+  app:
+    build: .
+    environment:
+      - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+  web:
+    extends:
+      service: app
+    command: bundle exec sidekiq -r ./sidekiq.rb
+    links:
+      - redis
+  worker:
+    extends:
+      service: app
+    command: bundle exec rackup -p 3000 --host 0.0.0.0
+    ports:
+      - 3000:3000
+    links:
+      - redis
+  redis:
+    image: redis:latest

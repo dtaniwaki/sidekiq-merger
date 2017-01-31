@@ -56,6 +56,14 @@ bundle exec rspec
 
 The test coverage is available at `./coverage/index.html`.
 
+To check the behavior of this plugin, you can run docker containers.
+
+```bash
+docker-compose up
+```
+
+Then, open `http://localhost:3000/sidekiq`. You can add merging jobs by accessing `http://localhost:3000/add`.
+
 ## Lint
 
 ```bash
