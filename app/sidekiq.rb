@@ -2,8 +2,8 @@ require "active_support/core_ext/numeric/time"
 require "sidekiq"
 require "sidekiq-status"
 require "sidekiq-merger"
-require_relative "./some_worker"
-require_relative "./unique_worker"
+require_relative "workers/some_worker"
+require_relative "workers/unique_worker"
 
 expiration = 30.minutes
 
