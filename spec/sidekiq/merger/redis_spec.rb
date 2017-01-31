@@ -193,6 +193,12 @@ describe Sidekiq::Merger::Redis do
   end
 
   describe "#lock" do
+    it "locks the key" do
+      subject.lock("foo", 3)
+      subject.redis do |conn|
+        expect(conn.exists("sidekiq-merger:lock:foo")).to eq true
+      end
+    end
   end
 
   describe "#get" do
