@@ -72,6 +72,7 @@ In this case, `SomeWorker` will be executed 3 times with args of `[4]`, `[3]` an
 Defines merge key so different arguments can be merged.
 
 Format: `String` or `Proc`
+
 e.g. `sidekiq_options merger: { key: -> (args) { args[0..1] } }`
 
 ### `unique` (optional, default: `false`)
@@ -79,6 +80,7 @@ e.g. `sidekiq_options merger: { key: -> (args) { args[0..1] } }`
 Prevents enqueue of jobs with identical arguments.
 
 Format: `Boolean`
+
 e.g. `true`
 
 ## Web UI
