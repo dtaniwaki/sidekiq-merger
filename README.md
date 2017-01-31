@@ -42,6 +42,8 @@ end
 
 ## Web UI
 
+![Web UI](misc/web_ui.png)
+
 Add this line to your `config/routes.rb` to activate web UI:
 
 ```ruby
