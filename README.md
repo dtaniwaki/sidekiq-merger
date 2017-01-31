@@ -6,7 +6,7 @@
 [![Coverage Status][cov-image]][cov-link]
 [![Code Climate][gpa-image]][gpa-link]
 
-Merge sidekiq jobs occurring before the execution time. Inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
+Merge [sidekiq](http://sidekiq.org/) jobs occurring before the execution times. Inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
 
 ## Installation
 
