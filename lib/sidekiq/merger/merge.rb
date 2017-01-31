@@ -1,7 +1,7 @@
 require_relative "redis"
 require "active_support/core_ext/hash/indifferent_access"
 
-class Sidekiq::Merger::Batch
+class Sidekiq::Merger::Merge
   class << self
     def all
       redis = Sidekiq::Merger::Redis.new
@@ -11,7 +11,7 @@ class Sidekiq::Merger::Batch
 
     def initialize_with_full_merge_key(full_merge_key, options = {})
       keys = full_merge_key.split(":")
-      raise "Invalid batch key" if keys.size < 3
+      raise "Invalid merge key" if keys.size < 3
       worker_class = keys[0].camelize.constantize
       queue = keys[1]
       merge_key = keys[2]
@@ -59,7 +59,7 @@ class Sidekiq::Merger::Batch
   end
 
   def size
-    @redis.batch_size(full_merge_key)
+    @redis.merge_size(full_merge_key)
   end
 
   def flush

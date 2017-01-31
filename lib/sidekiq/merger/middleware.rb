@@ -1,4 +1,4 @@
-require_relative "batch"
+require_relative "merge"
 
 class Sidekiq::Merger::Middleware
   def call(worker_class, msg, queue, _redis_pool = nil)
@@ -8,7 +8,7 @@ class Sidekiq::Merger::Middleware
     options = worker_class.get_sidekiq_options
 
     if !msg["at"].nil? && options.key?("merger")
-      Sidekiq::Merger::Batch
+      Sidekiq::Merger::Merge
         .initialize_with_args(worker_class, queue, msg["args"])
         .add(msg["args"], msg["at"])
       false

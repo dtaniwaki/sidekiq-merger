@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe Sidekiq::Merger::Batch do
+describe Sidekiq::Merger::Merge do
   subject { described_class.new(worker_class, queue, "foo", redis: redis) }
   let(:redis) { Sidekiq::Merger::Redis.new }
   let(:queue) { "queue" }
@@ -27,8 +27,8 @@ describe Sidekiq::Merger::Batch do
   describe ".all" do
     it "returns all the keys" do
       redis.redis do |conn|
-        conn.sadd("sidekiq-merger:batches", "string:foo:xxx")
-        conn.sadd("sidekiq-merger:batches", "numeric:bar:yyy")
+        conn.sadd("sidekiq-merger:merges", "string:foo:xxx")
+        conn.sadd("sidekiq-merger:merges", "numeric:bar:yyy")
       end
 
       expect(described_class.all).to contain_exactly(
@@ -40,12 +40,12 @@ describe Sidekiq::Merger::Batch do
     context "including invalid key" do
       it "raises an error" do
         redis.redis do |conn|
-          conn.sadd("sidekiq-merger:batches", "string:foo:xxx")
-          conn.sadd("sidekiq-merger:batches", "invalid")
+          conn.sadd("sidekiq-merger:merges", "string:foo:xxx")
+          conn.sadd("sidekiq-merger:merges", "invalid")
         end
         expect {
           described_class.all
-        }.to raise_error RuntimeError, "Invalid batch key"
+        }.to raise_error RuntimeError, "Invalid merge key"
       end
     end
   end
@@ -62,14 +62,14 @@ describe Sidekiq::Merger::Batch do
   end
 
   describe "#add" do
-    it "adds the args in lazy batch" do
+    it "adds the args in lazy merge" do
       expect(redis).to receive(:push).with("name:queue:foo", [1, 2, 3], execution_time)
       subject.add([1, 2, 3], execution_time)
     end
   end
 
   describe "#delete" do
-    it "adds the args in lazy batch" do
+    it "adds the args in lazy merge" do
       expect(redis).to receive(:delete).with("name:queue:foo", [1, 2, 3])
       subject.delete([1, 2, 3])
     end
@@ -96,7 +96,7 @@ describe Sidekiq::Merger::Batch do
 
   describe "#can_flush?" do
     let(:options) { { flush_interval: 10.seconds } }
-    context "it has not get anything in batch" do
+    context "it has not get anything in merge" do
       it "returns false" do
         expect(subject.can_flush?).to eq false
       end
@@ -117,7 +117,7 @@ describe Sidekiq::Merger::Batch do
   end
 
   describe "#full_merge_key" do
-    it "returns full batch key" do
+    it "returns full merge key" do
       expect(subject.full_merge_key).to eq "name:queue:foo"
     end
   end

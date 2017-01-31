@@ -19,7 +19,7 @@ module Sidekiq::Merger
       ) { flusher.flush }
       task.add_observer(observer)
       logger.info(
-        "[Sidekiq::Merger] Started polling batches every #{interval} seconds"
+        "[Sidekiq::Merger] Started polling merges every #{interval} seconds"
       )
       task.execute
     end

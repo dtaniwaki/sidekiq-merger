@@ -9,7 +9,7 @@ describe Sidekiq::Merger::Redis do
   describe ".purge" do
     it "cleans up all the keys" do
       described_class.redis do |conn|
-        conn.sadd("sidekiq-merger:batches", "test")
+        conn.sadd("sidekiq-merger:merges", "test")
         conn.set("sidekiq-merger:msg:foo", "test")
         conn.set("sidekiq-merger:lock:foo", "test")
       end
@@ -17,7 +17,7 @@ describe Sidekiq::Merger::Redis do
       described_class.purge!
 
       described_class.redis do |conn|
-        expect(conn.smembers("sidekiq-merger:batches")).to be_empty
+        expect(conn.smembers("sidekiq-merger:merges")).to be_empty
         expect(conn.keys("sidekiq-merger:msg:*")).to be_empty
         expect(conn.keys("sidekiq-merger:lock:*")).to be_empty
       end
@@ -28,7 +28,7 @@ describe Sidekiq::Merger::Redis do
     it "pushes the args" do
       subject.push("foo", [1, 2, 3], execution_time)
       described_class.redis do |conn|
-        expect(conn.smembers("sidekiq-merger:batches")).to contain_exactly "foo"
+        expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
         expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
         expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
         expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]"
@@ -41,14 +41,14 @@ describe Sidekiq::Merger::Redis do
       end
     end
 
-    context "the batch key already exists" do
+    context "the merge key already exists" do
       before do
         subject.push("foo", [1, 2, 3], execution_time)
       end
       it "pushes the args" do
         subject.push("foo", [2, 3, 4], execution_time + 1.hour)
         described_class.redis do |conn|
-          expect(conn.smembers("sidekiq-merger:batches")).to contain_exactly "foo"
+          expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
           expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
           expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
           expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]", "[2,3,4]"
@@ -62,14 +62,14 @@ describe Sidekiq::Merger::Redis do
       end
     end
 
-    context "the args has already been pushed" do
+    context "the args has already ben pushed" do
       before do
         subject.push("foo", [1, 2, 3], execution_time)
       end
       it "does not push the args" do
         subject.push("foo", [1, 2, 3], execution_time + 1.hour)
         described_class.redis do |conn|
-          expect(conn.smembers("sidekiq-merger:batches")).to contain_exactly "foo"
+          expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
           expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
           expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
           expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]"
@@ -83,14 +83,14 @@ describe Sidekiq::Merger::Redis do
       end
     end
 
-    context "other batch key already exists" do
+    context "other merge key already exists" do
       before do
         subject.push("foo", [1, 2, 3], execution_time)
       end
-      it "does not interfere the other batch" do
+      it "does not interfere the other merge" do
         subject.push("bar", [2, 3, 4], execution_time + 1.hour)
         described_class.redis do |conn|
-          expect(conn.smembers("sidekiq-merger:batches")).to contain_exactly "foo", "bar"
+          expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo", "bar"
           expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo", "sidekiq-merger:time:bar"
           expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo", "sidekiq-merger:msg:bar"
           expect(conn.smembers("sidekiq-merger:msg:foo")).to contain_exactly "[1,2,3]"
@@ -110,7 +110,7 @@ describe Sidekiq::Merger::Redis do
   describe "#delete" do
   end
 
-  describe "#batch_size" do
+  describe "#merge_size" do
   end
 
   describe "#exists?" do

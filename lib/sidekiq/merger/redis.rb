@@ -13,12 +13,12 @@ class Sidekiq::Merger::Redis
           end
           return true
         SCRIPT
-        conn.eval(script, [], [batches_key, msg_key("*"), lock_key("*")])
+        conn.eval(script, [], [merges_key, msg_key("*"), lock_key("*")])
       end
     end
 
-    def batches_key
-      "#{KEY_PREFIX}:batches"
+    def merges_key
+      "#{KEY_PREFIX}:merges"
     end
 
     def msg_key(key)
@@ -41,7 +41,7 @@ class Sidekiq::Merger::Redis
   def push(key, msg, execution_time)
     redis do |conn|
       conn.multi do
-        conn.sadd(batches_key, key)
+        conn.sadd(merges_key, key)
         conn.setnx(time_key(key), execution_time.to_i)
         conn.sadd(msg_key(key), msg.to_json)
       end
@@ -56,7 +56,7 @@ class Sidekiq::Merger::Redis
     redis { |conn| Time.at(conn.get(time_key(key)).to_i) rescue nil }
   end
 
-  def batch_size(key)
+  def merge_size(key)
     redis { |conn| conn.scard(msg_key(key)) }
   end
 
@@ -65,7 +65,7 @@ class Sidekiq::Merger::Redis
   end
 
   def all
-    redis { |conn| conn.smembers(batches_key) }
+    redis { |conn| conn.smembers(merges_key) }
   end
 
   def lock(key, ttl)
@@ -86,7 +86,7 @@ class Sidekiq::Merger::Redis
       msgs = conn.smembers(msg_key(key))
       conn.del(msg_key(key))
       conn.del(time_key(key))
-      conn.srem(batches_key, key)
+      conn.srem(merges_key, key)
     end
     msgs.map { |msg| JSON.parse(msg) }
   end
@@ -96,11 +96,11 @@ class Sidekiq::Merger::Redis
       conn.del(msg_key(key))
       conn.del(time_key(key))
       conn.del(lock_key(key))
-      conn.srem(batches_key, key)
+      conn.srem(merges_key, key)
     end
   end
 
   private
 
-  delegate :batches_key, :msg_key, :time_key, :lock_key, :redis, to: "self.class"
+  delegate :merges_key, :msg_key, :time_key, :lock_key, :redis, to: "self.class"
 end

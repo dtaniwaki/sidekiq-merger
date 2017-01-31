@@ -4,12 +4,12 @@ class Sidekiq::Merger::Flusher
   end
 
   def flush
-    batches = Sidekiq::Merger::Batch.all.select(&:can_flush?)
-    unless batches.empty?
+    merges = Sidekiq::Merger::Merge.all.select(&:can_flush?)
+    unless merges.empty?
       @logger.info(
-        "[Sidekiq::Merger] Trying to flush batched queues: #{batches.map(&:full_merge_key).join(",")}"
+        "[Sidekiq::Merger] Trying to flush merged queues: #{merges.map(&:full_merge_key).join(",")}"
       )
-      batches.each(&:flush)
+      merges.each(&:flush)
     end
   end
 end

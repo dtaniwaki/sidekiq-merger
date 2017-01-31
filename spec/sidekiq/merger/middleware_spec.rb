@@ -26,7 +26,7 @@ describe Sidekiq::Merger::Middleware do
   end
 
   describe "#call" do
-    it "adds the args to the batch" do
+    it "adds the args to the merge" do
       subject.call(worker_class, { "args" => [1, 2, 3], "at" => now + 10.seconds }, queue) {}
       subject.call(worker_class, { "args" => [2, 3, 4], "at" => now + 15.seconds }, queue) {}
       flusher.flush
@@ -39,7 +39,7 @@ describe Sidekiq::Merger::Middleware do
       expect(job["args"]).to eq [[1, 2, 3], [2, 3, 4]]
     end
     context "without at msg" do
-      it "does not add the args to the batch" do
+      it "does not add the args to the merge" do
         subject.call(worker_class, { "args" => [1, 2, 3] }, queue) {}
         subject.call(worker_class, { "args" => [2, 3, 4] }, queue) {}
         flusher.flush
