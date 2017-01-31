@@ -6,7 +6,7 @@
 [![Coverage Status][cov-image]][cov-link]
 [![Code Climate][gpa-image]][gpa-link]
 
-Merge sidekiq jobs occurring within specific period. This sidekiq middleware is inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
+Merge sidekiq jobs occurring before the execution time. Inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
 
 ## Installation
 
@@ -34,8 +34,10 @@ class SomeWorker
 
   sidekiq_options merger: { key: -> (args) { args[0] } }
 
-  def perform(*ids)
-    # Do something
+  def perform(*merged_args)
+    merged_args.each do |args|
+      # Do something
+    end
   end
 end
 ```
@@ -46,9 +48,12 @@ Then, enqueue jobs by `perform_in` or `perform_at`.
 SomeWorker.perform_in 100, 4
 SomeWorker.perform_in 100, 3
 SomeWorker.perform_in 100, 5
+# Passed 100 seconds from the first enqueue.
+SomeWorker.perform_in 100, 6
+SomeWorker.perform_in 100, 1
 ```
 
-`SomeWorker` will be executed in 100 seconds with args of `[4], [3], [5]`.
+`SomeWorker` will be executed in 100 seconds with args of `[4], [3], [5]`, then with args of `[6], [1]`.
 
 `perform_async` works without merging args.
 
