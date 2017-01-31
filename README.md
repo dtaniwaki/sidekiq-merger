@@ -18,27 +18,37 @@ gem 'sidekiq-merger'
 
 And then execute:
 
-    $ bundle
+  $ bundle
 
 Or install it yourself as:
 
-    $ gem install sidekiq-merger
+  $ gem install sidekiq-merger
 
 ## Usage
 
 Add merger option into your workers.
 
-```
-class YourWorker
+```ruby
+class SomeWorker
   include Sidekiq::Worker
 
   sidekiq_options merger: { key: -> (args) { args[0] } }
 
-  def perform(all_args)
+  def perform(*ids)
     # Do something
   end
 end
 ```
+
+Then, enqueue jobs by `perform_in` or `perform_at`.
+
+```ruby
+SomeWorker.perform_in 100, 4
+SomeWorker.perform_in 100, 3
+SomeWorker.perform_in 100, 5
+```
+
+`SomeWorker` will be executed in 100 seconds with args of `[4], [3], [5]`.
 
 ## Web UI
 
@@ -52,25 +62,19 @@ require "sidekiq/merger/web"
 
 ## Test
 
-```bash
-bundle exec rspec
-```
+  $ bundle exec rspec
 
 The test coverage is available at `./coverage/index.html`.
 
 To check the behavior of this plugin, you can run docker containers.
 
-```bash
-docker-compose up
-```
+  $ docker-compose up
 
 Then, open `http://localhost:3000/sidekiq`. You can add merging jobs by accessing `http://localhost:3000/add`.
 
 ## Lint
 
-```bash
-bundle exec rubocop
-```
+  $ bundle exec rubocop
 
 ## Contributing
 
