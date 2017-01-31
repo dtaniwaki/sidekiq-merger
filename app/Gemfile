@@ -1,6 +1,8 @@
 source "https://rubygems.org"
 
+gem "rack-flash3"
 gem "sinatra"
 gem "sidekiq"
+gem "sidekiq-status"
 
 gem "sidekiq-merger", path: "../"

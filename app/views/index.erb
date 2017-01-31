@@ -1,0 +1,35 @@
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+  <h1>Sidekiq Merger</h1>
+  <% if flash[:notice] %>
+    <p style="color: green; font-weight: bold;"><%= flash[:notice] %></p>
+  <% end %>
+  <p>
+    <a href="/sidekiq" target="_blank">Open sidekiq console</a>
+  </p>
+  <h2>Workers</h2>
+  <div style="margin-left: 20px;">
+    <h3>SomeWorker</h3>
+    <div>
+      <form action="/some_worker/perform_in" method="post" style="display: inline-block;">
+        <input type="submit" name="perform_in" value="perform_in">
+      </form>
+      <form action="/some_worker/perform_in" method="post" style="display: inline-block;">
+        <input type="submit" name="perform_async" value="perform_async">
+      </form>
+    </div>
+    <h3>UniqueWorker</h3>
+    <div>
+      <form action="/some_worker/perform_in" method="post" style="display: inline-block;">
+        <input type="submit" name="perform_in" value="perform_in">
+      </form>
+      <form action="/some_worker/perform_in" method="post" style="display: inline-block;">
+        <input type="submit" name="perform_async" value="perform_async">
+      </form>
+    </div>
+  </div>
+</body>
+</html>

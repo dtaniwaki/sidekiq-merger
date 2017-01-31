@@ -1,19 +1,43 @@
 require_relative "./sidekiq"
 require "sinatra/base"
+require "rack/flash"
 require "sidekiq/web"
+require "sidekiq-status/web"
+require "sidekiq/merger/web"
 
 class App < Sinatra::Application
-  get "/some_worker" do
-    n = rand(10)
-    SomeWorker.perform_in(60, n)
-    status 200
-    body "Added #{n}"
+  enable :sessions
+  use Rack::Flash
+
+  get "/" do
+    erb :index
   end
 
-  get "/unique_worker" do
+  post "/some_worker/perform_in" do
     n = rand(10)
-    UniqueWorker.perform_in(60, n)
-    status 200
-    body "Added #{n}"
+    SomeWorker.perform_in((params[:in] || 60).to_i, n)
+    flash[:notice] = "Added #{n} to SomeWorker"
+    redirect "/"
+  end
+
+  post "/some_worker/perform_async" do
+    n = rand(10)
+    SomeWorker.perform_async(n)
+    flash[:notice] = "Added #{n} to SomeWorker"
+    redirect "/"
+  end
+
+  post "/unique_worker/perform_in" do
+    n = rand(10)
+    UniqueWorker.perform_in((params[:in] || 60).to_i, n)
+    flash[:notice] = "Added #{n} to UniqueWorker"
+    redirect "/"
+  end
+
+  post "/unique_worker/perform_async" do
+    n = rand(10)
+    UniqueWorker.perform_async(n)
+    flash[:notice] = "Added #{n} to UniqueWorker"
+    redirect "/"
   end
 end
