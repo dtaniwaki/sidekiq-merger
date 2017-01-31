@@ -75,7 +75,8 @@ class Sidekiq::Merger::Merge
       Sidekiq::Client.push(
         "class" => worker_class,
         "queue" => queue,
-        "args" => msgs
+        "args" => msgs,
+        "merged" => true
       )
     end
   end

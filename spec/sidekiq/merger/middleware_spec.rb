@@ -17,7 +17,7 @@ describe Sidekiq::Merger::Middleware do
         "name"
       end
 
-      def perform(args)
+      def perform(*args)
       end
     end
   end
@@ -39,11 +39,17 @@ describe Sidekiq::Merger::Middleware do
       expect(job["args"]).to contain_exactly [1, 2, 3], [2, 3, 4]
     end
     context "without at msg" do
-      it "does not add the args to the merge" do
-        subject.call(worker_class, { "args" => [1, 2, 3] }, queue) {}
-        subject.call(worker_class, { "args" => [2, 3, 4] }, queue) {}
+      it "peforms now with brackets" do
+        expect { |b| subject.call(worker_class, { "args" => [1, 2, 3] }, queue, &b) }.to yield_with_args(worker_class, { "args" => [[1, 2, 3]] }, queue, anything)
         flusher.flush
         expect(worker_class.jobs.size).to eq 0
+      end
+      context "merged msgs" do
+        it "performs now" do
+          expect { |b| subject.call(worker_class, { "args" => [[1, 2, 3]], "merged" => true }, queue, &b) }.to yield_with_args(worker_class, { "args" => [[1, 2, 3]] }, queue, anything)
+          flusher.flush
+          expect(worker_class.jobs.size).to eq 0
+        end
       end
     end
   end

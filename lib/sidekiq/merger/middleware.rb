@@ -1,7 +1,7 @@
 require_relative "merge"
 
 class Sidekiq::Merger::Middleware
-  def call(worker_class, msg, queue, _redis_pool = nil)
+  def call(worker_class, msg, queue, redis_pool = nil)
     return yield if defined?(Sidekiq::Testing) && Sidekiq::Testing.inline?
 
     worker_class = worker_class.camelize.constantize if worker_class.is_a?(String)
@@ -13,7 +13,8 @@ class Sidekiq::Merger::Middleware
         .add(msg["args"], msg["at"])
       false
     else
-      yield
+      msg["args"] = [msg["args"]] unless msg.delete("merged")
+      yield(worker_class, msg, queue, redis_pool)
     end
   end
 end

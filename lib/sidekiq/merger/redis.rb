@@ -77,7 +77,6 @@ class Sidekiq::Merger::Redis
 
   def exists?(key, msg)
     msg_json = msg.to_json
-    puts [unique_msg_key(key), msg_json].inspect
     redis { |conn| conn.sismember(unique_msg_key(key), msg_json) }
   end
 
