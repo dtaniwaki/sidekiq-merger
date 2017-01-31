@@ -42,14 +42,14 @@ class Sidekiq::Merger::Redis
     end
   end
 
-  def push(key, msg, execution_time, unique: false)
+  def push(key, msg, execution_time)
     msg_json = msg.to_json
     redis do |conn|
       conn.multi do
         conn.sadd(merges_key, key)
         conn.setnx(time_key(key), execution_time.to_i)
+        conn.lpush(msg_key(key), msg_json)
         conn.sadd(unique_msg_key(key), msg_json)
-        conn.lpush(msg_key(key), msg_json) if !unique || !conn.sismember(unique_msg_key(key), msg_json)
       end
     end
   end
@@ -77,6 +77,7 @@ class Sidekiq::Merger::Redis
 
   def exists?(key, msg)
     msg_json = msg.to_json
+    puts [unique_msg_key(key), msg_json].inspect
     redis { |conn| conn.sismember(unique_msg_key(key), msg_json) }
   end
 

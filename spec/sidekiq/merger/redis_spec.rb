@@ -27,112 +27,101 @@ describe Sidekiq::Merger::Redis do
   end
 
   describe "#push" do
-    it "pushes the args" do
-      subject.push("foo", [1, 2, 3], execution_time)
-      described_class.redis do |conn|
-        expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
-        expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
-        expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
-        expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
-        expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
-        expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]"
+    shared_examples_for "push spec" do
+      it "pushes the args" do
+        subject.push(pushing_key, pushing_msg, pushing_execution_time)
+        described_class.redis do |conn|
+          expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly(*merge_keys)
+          expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly(*times.keys)
+          expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly(*unique_msgs_h.keys)
+          unique_msgs_h.each do |key, msgs|
+            expect(conn.smembers(key)).to contain_exactly(*msgs)
+          end
+          expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly(*msgs_h.keys)
+          msgs_h.each do |key, msgs|
+            expect(conn.lrange(key, 0, -1)).to contain_exactly(*msgs)
+          end
+        end
       end
-    end
-    it "sets the execution time" do
-      subject.push("foo", [1, 2, 3], execution_time)
-      described_class.redis do |conn|
-        expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
+      it "sets the execution time" do
+        subject.push(pushing_key, pushing_msg, pushing_execution_time)
+        described_class.redis do |conn|
+          merge_keys.each do |key, time|
+            expect(conn.get(key)).to eq time
+          end
+        end
       end
     end
 
+    let(:pushing_key) { "foo" }
+    let(:pushing_msg) { [1, 2, 3] }
+    let(:pushing_execution_time) { execution_time }
+
+    include_examples "push spec" do
+      let(:merge_keys) { ["foo"] }
+      let(:times) { {
+        "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
+      } }
+      let(:unique_msgs_h) { {
+        "sidekiq-merger:unique_msg:foo" => ["[1,2,3]"]
+      } }
+      let(:msgs_h) { {
+        "sidekiq-merger:msg:foo" => ["[1,2,3]"]
+      } }
+    end
+
     context "the merge key already exists" do
-      before do
-        subject.push("foo", [1, 2, 3], execution_time)
-      end
-      it "pushes the args" do
-        subject.push("foo", [2, 3, 4], execution_time + 1.hour)
-        described_class.redis do |conn|
-          expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
-          expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
-          expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
-          expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]", "[2,3,4]"
-          expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
-          expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]", "[2,3,4]"
-        end
-      end
-      it "does not update the execution time" do
-        subject.push("foo", [2, 3, 4], execution_time + 1.hour)
-        described_class.redis do |conn|
-          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
-        end
+      let(:pushing_msg) { [2, 3, 4] }
+      before { subject.push("foo", [1, 2, 3], execution_time) }
+      include_examples "push spec" do
+        let(:merge_keys) { ["foo"] }
+        let(:times) { {
+          "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
+        } }
+        let(:unique_msgs_h) { {
+          "sidekiq-merger:unique_msg:foo" => ["[1,2,3]", "[2,3,4]"]
+        } }
+        let(:msgs_h) { {
+          "sidekiq-merger:msg:foo" => ["[1,2,3]", "[2,3,4]"]
+        } }
       end
     end
 
     context "the args has already ben pushed" do
-      before do
-        subject.push("foo", [1, 2, 3], execution_time)
-      end
-      it "pushes the args" do
-        subject.push("foo", [1, 2, 3], execution_time + 1.hour)
-        described_class.redis do |conn|
-          expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
-          expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
-          expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
-          expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
-          expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
-          expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]", "[1,2,3]"
-        end
-      end
-      it "does not update the execution time" do
-        subject.push("foo", [1, 2, 3], execution_time + 1.hour)
-        described_class.redis do |conn|
-          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
-        end
-      end
-      context "with unique option" do
-        it "does not push the args" do
-          subject.push("foo", [1, 2, 3], execution_time + 1.hour, unique: true)
-          described_class.redis do |conn|
-            expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo"
-            expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo"
-            expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo"
-            expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
-            expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo"
-            expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]"
-          end
-        end
-        it "does not update the execution time" do
-          subject.push("foo", [1, 2, 3], execution_time + 1.hour, unique: true)
-          described_class.redis do |conn|
-            expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
-          end
-        end
+      before { subject.push("foo", [1, 2, 3], execution_time) }
+      include_examples "push spec" do
+        let(:merge_keys) { ["foo"] }
+        let(:times) { {
+          "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
+        } }
+        let(:unique_msgs_h) { {
+          "sidekiq-merger:unique_msg:foo" => ["[1,2,3]"]
+        } }
+        let(:msgs_h) { {
+          "sidekiq-merger:msg:foo" => ["[1,2,3]", "[1,2,3]"]
+        } }
       end
     end
 
     context "other merge key already exists" do
-      before do
-        subject.push("foo", [1, 2, 3], execution_time)
-      end
-      it "does not interfere the other merge" do
-        subject.push("bar", [2, 3, 4], execution_time + 1.hour)
-        described_class.redis do |conn|
-          expect(conn.smembers("sidekiq-merger:merges")).to contain_exactly "foo", "bar"
-          expect(conn.keys("sidekiq-merger:time:*")).to contain_exactly "sidekiq-merger:time:foo", "sidekiq-merger:time:bar"
-          expect(conn.keys("sidekiq-merger:unique_msg:*")).to contain_exactly "sidekiq-merger:unique_msg:foo", "sidekiq-merger:unique_msg:bar"
-          expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[1,2,3]"
-          expect(conn.smembers("sidekiq-merger:unique_msg:bar")).to contain_exactly "[2,3,4]"
-          expect(conn.keys("sidekiq-merger:msg:*")).to contain_exactly "sidekiq-merger:msg:foo", "sidekiq-merger:msg:bar"
-          expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[1,2,3]"
-          expect(conn.lrange("sidekiq-merger:msg:bar", 0, -1)).to contain_exactly "[2,3,4]"
-        end
-      end
-      it "sets the execution time" do
-        subject.push("bar", [2, 3, 4], execution_time + 1.hour)
-        described_class.redis do |conn|
-          expect(conn.get("sidekiq-merger:time:foo")).to eq execution_time.to_i.to_s
-          expect(conn.get("sidekiq-merger:time:bar")).to eq (execution_time + 1.hour).to_i.to_s
-        end
+      let(:pushing_key) { "bar" }
+      let(:pushing_msg) { [2, 3, 4] }
+      let(:pushing_execution_time) { execution_time + 1.hour }
+      before { subject.push("foo", [1, 2, 3], execution_time) }
+      include_examples "push spec" do
+        let(:merge_keys) { ["foo", "bar"] }
+        let(:times) { {
+          "sidekiq-merger:time:foo" => execution_time.to_i.to_s,
+          "sidekiq-merger:time:bar" => (execution_time + 1.hour).to_i.to_s,
+        } }
+        let(:unique_msgs_h) { {
+          "sidekiq-merger:unique_msg:foo" => ["[1,2,3]"],
+          "sidekiq-merger:unique_msg:bar" => ["[2,3,4]"],
+        } }
+        let(:msgs_h) { {
+          "sidekiq-merger:msg:foo" => ["[1,2,3]"],
+          "sidekiq-merger:msg:bar" => ["[2,3,4]"],
+        } }
       end
     end
   end
@@ -144,6 +133,17 @@ describe Sidekiq::Merger::Redis do
   end
 
   describe "#exists?" do
+    context "unique key exists" do
+      it "returns true" do
+        described_class.redis { |conn| conn.sadd("sidekiq-merger:unique_msg:foo", "\"test\"") }
+        expect(subject.exists?("foo", "test")).to eq true
+      end
+    end
+    context "unique key does not exists" do
+      it "returns false" do
+        expect(subject.exists?("foo", "test")).to eq false
+      end
+    end
   end
 
   describe "#all" do
