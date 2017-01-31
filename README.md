@@ -48,6 +48,20 @@ Add this line to your `config/routes.rb` to activate web UI:
 require "sidekiq/merger/web"
 ```
 
+## Test
+
+```bash
+bundle exec rspec
+```
+
+The test coverage is available at `./coverage/index.html`.
+
+## Lint
+
+```bash
+bundle exec rubocop
+```
+
 ## Contributing
 
 1. Fork it
