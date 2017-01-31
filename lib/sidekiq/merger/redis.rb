@@ -59,7 +59,7 @@ class Sidekiq::Merger::Redis
     redis do |conn|
       conn.multi do
         conn.srem(unique_msg_key(key), msg_json)
-        conn.lrem(msg_key(key), msg_json)
+        conn.lrem(msg_key(key), 0, msg_json)
       end
     end
   end

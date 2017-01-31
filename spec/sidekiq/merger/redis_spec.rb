@@ -127,6 +127,33 @@ describe Sidekiq::Merger::Redis do
   end
 
   describe "#delete" do
+    before do
+      subject.redis do |conn|
+        conn.sadd("sidekiq-merger:unique_msg:foo", "[1,2,3]")
+        conn.sadd("sidekiq-merger:unique_msg:foo", "[2,3,4]")
+        conn.lpush("sidekiq-merger:msg:foo", "[1,2,3]")
+        conn.lpush("sidekiq-merger:msg:foo", "[2,3,4]")
+      end
+    end
+    it "deletes the msg" do
+      subject.delete("foo", [1, 2, 3])
+      subject.redis do |conn|
+        expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[2,3,4]"
+        expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[2,3,4]"
+      end
+    end
+    context "with duplicate msgs" do
+      it "deletes the msg" do
+        subject.redis do |conn|
+          conn.lpush("sidekiq-merger:msg:foo", "[1,2,3]")
+        end
+        subject.delete("foo", [1, 2, 3])
+        subject.redis do |conn|
+          expect(conn.smembers("sidekiq-merger:unique_msg:foo")).to contain_exactly "[2,3,4]"
+          expect(conn.lrange("sidekiq-merger:msg:foo", 0, -1)).to contain_exactly "[2,3,4]"
+        end
+      end
+    end
   end
 
   describe "#merge_size" do
