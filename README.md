@@ -50,6 +50,32 @@ SomeWorker.perform_in 100, 5
 
 `SomeWorker` will be executed in 100 seconds with args of `[4], [3], [5]`.
 
+`perform_async` works without merging args.
+
+```ruby
+SomeWorker.perform_async 4
+SomeWorker.perform_async 3
+SomeWorker.perform_async 5
+```
+
+In this case, `SomeWorker` will be executed 3 times with args of `[4]`, `[3]` and `[5]`.
+
+## Options
+
+### `key` (default: arguments)
+
+Defines merge key so different arguments can be merged.
+
+Format: `string` or `proc`
+e.g. `sidekiq_options merger: { key: -> (args) { args[0..1] } }`
+
+### `unique` (default: `false`)
+
+Prevents enqueue of jobs with identical arguments.
+
+Format: `Boolean`
+e.g. `true`
+
 ## Web UI
 
 ![Web UI](misc/web_ui.png)
