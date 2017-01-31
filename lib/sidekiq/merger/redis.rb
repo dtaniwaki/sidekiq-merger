@@ -53,7 +53,10 @@ class Sidekiq::Merger::Redis
   end
 
   def execution_time(key)
-    redis { |conn| Time.at(conn.get(time_key(key)).to_i) rescue nil }
+    redis do |conn|
+      t = conn.get(time_key(key))
+      Time.at(t.to_i) unless t.nil?
+    end
   end
 
   def merge_size(key)

@@ -95,19 +95,18 @@ describe Sidekiq::Merger::Merge do
   end
 
   describe "#can_flush?" do
-    let(:options) { { flush_interval: 10.seconds } }
     context "it has not get anything in merge" do
       it "returns false" do
         expect(subject.can_flush?).to eq false
       end
     end
-    context "it has not passed the interval time" do
+    context "it has not passed the execution time" do
       it "returns false" do
         subject.add([], execution_time)
         expect(subject.can_flush?).to eq false
       end
     end
-    context "it has passed the interval time" do
+    context "it has passed the execution time" do
       it "returns true" do
         subject.add([], execution_time)
         Timecop.travel(10.seconds)
