@@ -1,7 +1,8 @@
 require "spec_helper"
 
 describe Sidekiq::Merger::Merge do
-  subject { described_class.new(worker_class, queue, "foo", redis: redis) }
+  subject { described_class.new(worker_class, queue, args, redis: redis) }
+  let(:args) { "foo" }
   let(:redis) { Sidekiq::Merger::Redis.new }
   let(:queue) { "queue" }
   let(:now) { Time.now }
@@ -61,6 +62,39 @@ describe Sidekiq::Merger::Merge do
     end
   end
 
+  describe ".merge_key" do
+    let(:args) { "foo" }
+    let(:options) { {} }
+    it "returns an empty string" do
+      expect(described_class.merge_key(worker_class, args)).to eq ""
+    end
+    context "string key" do
+      let(:options) { { key: "bar" } }
+      it "returns the string" do
+        expect(described_class.merge_key(worker_class, args)).to eq "bar"
+      end
+    end
+    context "other type key" do
+      let(:options) { { key: [1, 2, 3] } }
+      it "returns nil" do
+        expect(described_class.merge_key(worker_class, args)).to eq "[1,2,3]"
+      end
+    end
+    context "proc key" do
+      let(:args) { [1, 2, 3] }
+      let(:options) { { key: -> (args) { args[0].to_s } } }
+      it "returns the result of the proc" do
+        expect(described_class.merge_key(worker_class, args)).to eq "1"
+      end
+      context "non-string result" do
+        let(:options) { { key: -> (args) { args[0] } } }
+        it "returns nil" do
+          expect(described_class.merge_key(worker_class, args)).to eq "1"
+        end
+      end
+    end
+  end
+
   describe "#add" do
     it "adds the args in lazy merge" do
       expect(redis).to receive(:push_message).with("name:queue:foo", [1, 2, 3], execution_time)
@@ -89,7 +123,36 @@ describe Sidekiq::Merger::Merge do
     end
   end
 
+  describe "#delete_all" do
+    before do
+      subject.add([1, 2, 3], execution_time)
+      subject.add([2, 3, 4], execution_time)
+    end
+    it "deletes all" do
+      expect {
+        subject.delete_all
+      }.to change { subject.size }.from(2).to(0)
+    end
+  end
+
   describe "#size" do
+    before do
+      subject.add([1, 2, 3], execution_time)
+      subject.add([2, 3, 4], execution_time)
+    end
+    it "returns the size" do
+      expect(subject.size).to eq 2
+    end
+  end
+
+  describe "#all_args" do
+    before do
+      subject.add([1, 2, 3], execution_time)
+      subject.add([2, 3, 4], execution_time)
+    end
+    it "returns all args" do
+      expect(subject.all_args).to contain_exactly [1, 2, 3], [2, 3, 4]
+    end
   end
 
   describe "#flush" do

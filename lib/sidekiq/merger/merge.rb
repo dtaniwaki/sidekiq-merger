@@ -26,10 +26,11 @@ class Sidekiq::Merger::Merge
       options = get_options(worker_class)
       merge_key = options["key"]
       if merge_key.respond_to?(:call)
-        merge_key.call(args)
-      else
-        merge_key
+        merge_key = merge_key.call(args)
       end
+      merge_key = "" if merge_key.nil?
+      merge_key = merge_key.to_json unless merge_key.is_a?(String)
+      merge_key
     end
 
     def get_options(worker_class)
