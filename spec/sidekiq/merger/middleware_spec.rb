@@ -1,28 +1,11 @@
 require "spec_helper"
 
-describe Sidekiq::Merger::Middleware do
+describe Sidekiq::Merger::Middleware, worker_class: true do
   subject { described_class.new }
   let(:flusher) { Sidekiq::Merger::Flusher.new(Sidekiq.logger) }
   let(:queue) { "queue" }
   let(:now) { Time.now }
-  let(:options) { { key: -> (args) { "key" } } }
-  let(:worker_class) do
-    local_options = options
-    Class.new do
-      include Sidekiq::Worker
-
-      sidekiq_options merger: local_options
-
-      def self.name
-        "name"
-      end
-
-      def perform(*args)
-      end
-    end
-  end
   before :example do
-    allow(Object).to receive(:const_get).with("Name").and_return worker_class
     Timecop.freeze(now)
   end
 

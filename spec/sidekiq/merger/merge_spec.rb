@@ -1,28 +1,13 @@
 require "spec_helper"
 
-describe Sidekiq::Merger::Merge do
+describe Sidekiq::Merger::Merge, worker_class: true do
   subject { described_class.new(worker_class, queue, args, redis: redis) }
   let(:args) { "foo" }
   let(:redis) { Sidekiq::Merger::Redis.new }
   let(:queue) { "queue" }
   let(:now) { Time.now }
   let(:execution_time) { now + 10.seconds }
-  let(:options) { { key: -> (args) { args.to_json } } }
-  let(:worker_class) do
-    local_options = options
-    Class.new do
-      include Sidekiq::Worker
-
-      sidekiq_options merger: local_options
-
-      def self.name
-        "name"
-      end
-
-      def perform(args)
-      end
-    end
-  end
+  let(:worker_options) { { key: -> (args) { args.to_json } } }
   before { Timecop.freeze(now) }
 
   describe ".all" do
@@ -64,30 +49,30 @@ describe Sidekiq::Merger::Merge do
 
   describe ".merge_key" do
     let(:args) { "foo" }
-    let(:options) { {} }
+    let(:worker_options) { {} }
     it "returns an empty string" do
       expect(described_class.merge_key(worker_class, args)).to eq ""
     end
     context "string key" do
-      let(:options) { { key: "bar" } }
+      let(:worker_options) { { key: "bar" } }
       it "returns the string" do
         expect(described_class.merge_key(worker_class, args)).to eq "bar"
       end
     end
     context "other type key" do
-      let(:options) { { key: [1, 2, 3] } }
+      let(:worker_options) { { key: [1, 2, 3] } }
       it "returns nil" do
         expect(described_class.merge_key(worker_class, args)).to eq "[1,2,3]"
       end
     end
     context "proc key" do
       let(:args) { [1, 2, 3] }
-      let(:options) { { key: -> (args) { args[0].to_s } } }
+      let(:worker_options) { { key: -> (args) { args[0].to_s } } }
       it "returns the result of the proc" do
         expect(described_class.merge_key(worker_class, args)).to eq "1"
       end
       context "non-string result" do
-        let(:options) { { key: -> (args) { args[0] } } }
+        let(:worker_options) { { key: -> (args) { args[0] } } }
         it "returns nil" do
           expect(described_class.merge_key(worker_class, args)).to eq "1"
         end
@@ -97,13 +82,13 @@ describe Sidekiq::Merger::Merge do
 
   describe "#add" do
     it "adds the args in lazy merge" do
-      expect(redis).to receive(:push_message).with("name:queue:foo", [1, 2, 3], execution_time)
+      expect(redis).to receive(:push_message).with("some_worker:queue:foo", [1, 2, 3], execution_time)
       subject.add([1, 2, 3], execution_time)
     end
     context "with unique option" do
-      let(:options) { { key: -> (args) { args.to_json }, unique: true } }
+      let(:worker_options) { { key: -> (args) { args.to_json }, unique: true } }
       it "adds the args in lazy merge" do
-        expect(redis).to receive(:push_message).with("name:queue:foo", [1, 2, 3], execution_time)
+        expect(redis).to receive(:push_message).with("some_worker:queue:foo", [1, 2, 3], execution_time)
         subject.add([1, 2, 3], execution_time)
       end
       context "the args has alredy been added" do
@@ -118,7 +103,7 @@ describe Sidekiq::Merger::Merge do
 
   describe "#delete" do
     it "adds the args in lazy merge" do
-      expect(redis).to receive(:delete_message).with("name:queue:foo", [1, 2, 3])
+      expect(redis).to receive(:delete_message).with("some_worker:queue:foo", [1, 2, 3])
       subject.delete([1, 2, 3])
     end
   end
@@ -195,7 +180,7 @@ describe Sidekiq::Merger::Merge do
 
   describe "#full_merge_key" do
     it "returns full merge key" do
-      expect(subject.full_merge_key).to eq "name:queue:foo"
+      expect(subject.full_merge_key).to eq "some_worker:queue:foo"
     end
   end
 end
