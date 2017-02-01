@@ -19,3 +19,5 @@ before_install:
 script:
   - "bundle exec rake spec"
   - "bundle exec rubocop -D"
+notifications:
+  email: false
