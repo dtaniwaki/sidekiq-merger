@@ -1,7 +1,7 @@
 PATH
   remote: ../
   specs:
-    sidekiq-merger (0.0.6)
+    sidekiq-merger (0.0.9)
       activesupport (>= 3.2, < 6)
       concurrent-ruby (~> 1.0)
       sidekiq (>= 3.4, < 5)
@@ -16,7 +16,7 @@ GEM
       tzinfo (~> 1.1)
     concurrent-ruby (1.0.4)
     connection_pool (2.2.1)
-    i18n (0.7.0)
+    i18n (0.8.0)
     minitest (5.10.1)
     rack (1.6.5)
     rack-flash3 (1.0.5)
