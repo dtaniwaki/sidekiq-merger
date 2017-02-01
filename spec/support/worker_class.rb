@@ -23,7 +23,12 @@ RSpec.shared_context "worker class", worker_class: true do
     allow(Object).to receive(:const_get).with(anything).and_call_original
     allow(Object).to receive(:const_get).with("SomeWorker").and_return worker_class
   end
-  after :example do
+  around :example do |example|
     worker_class.jobs.clear
+    begin
+      example.run
+    ensure
+      worker_class.jobs.clear
+    end
   end
 end
