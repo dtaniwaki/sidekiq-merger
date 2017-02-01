@@ -12,4 +12,7 @@ Sidekiq.configure_server do |config|
   end
 end
 
-Sidekiq::Merger.start! if Sidekiq.server?
+if Sidekiq.server?
+  task = Sidekiq::Merger.create_task
+  task.execute
+end

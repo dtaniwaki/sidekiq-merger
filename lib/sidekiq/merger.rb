@@ -12,7 +12,7 @@ module Sidekiq::Merger
   class << self
     attr_accessor :logger
 
-    def start!
+    def create_task
       interval = Sidekiq::Merger::Config.poll_interval
       observer = Sidekiq::Merger::LoggingObserver.new(logger)
       flusher = Sidekiq::Merger::Flusher.new(logger)
@@ -20,10 +20,7 @@ module Sidekiq::Merger
         execution_interval: interval
       ) { flusher.flush }
       task.add_observer(observer)
-      logger.info(
-        "[#{Sidekiq::Merger::LOGGER_TAG}] Started polling merges every #{interval} seconds"
-      )
-      task.execute
+      task
     end
   end
 
