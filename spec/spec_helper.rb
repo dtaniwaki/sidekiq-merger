@@ -43,9 +43,12 @@ RSpec.configure do |config|
     Sidekiq.logger = nil
   end
 
-  config.before :example do
-    Sidekiq::Merger::Redis.redis do |conn|
-      conn.flushall
+  config.around :example do |example|
+    Sidekiq::Merger::Redis.redis { |conn| conn.flushall }
+    begin
+      example.run
+    ensure
+      Sidekiq::Merger::Redis.redis { |conn| conn.flushall }
     end
   end
 
