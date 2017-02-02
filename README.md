@@ -8,6 +8,16 @@
 
 Merge [sidekiq](http://sidekiq.org/) jobs occurring before the execution times. Inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
 
+## Use Case
+
+### Cancel Task
+
+![Cancel Task](misc/cancel_task_flow.png)
+
+### Bulk Notification
+
+![Bulk Notification](misc/bulk_notification_flow.png)
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -133,4 +143,3 @@ Copyright (c) 2017 dtaniwaki. See [LICENSE](LICENSE) for details.
 [cov-link]:    https://coveralls.io/r/dtaniwaki/sidekiq-merger
 [gpa-image]:   https://codeclimate.com/github/dtaniwaki/sidekiq-merger.svg
 [gpa-link]:    https://codeclimate.com/github/dtaniwaki/sidekiq-merger
-
