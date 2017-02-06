@@ -23,4 +23,4 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
   redis:
-    image: redis:latest
+    image: redis:3.2.7
