@@ -1,6 +1,6 @@
 require "active_support/configurable"
 
-module Sidekiq::Merger::Config
+class Sidekiq::Merger::Config
   include ActiveSupport::Configurable
 
   def self.options

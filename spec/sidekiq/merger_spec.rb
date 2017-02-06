@@ -11,4 +11,19 @@ describe Sidekiq::Merger do
       task.shutdown
     end
   end
+  describe ".configure" do
+    it 'yields to the config' do
+      expect { |b| described_class.configure(&b) }.to yield_with_args(described_class.config)
+    end
+  end
+  describe ".config" do
+    it "returns a config" do
+      expect(described_class.config).to be_a Sidekiq::Merger::Config
+    end
+    context "called twice" do
+      it "returns the same config instance" do
+        expect(described_class.config).to be described_class.config
+      end
+    end
+  end
 end

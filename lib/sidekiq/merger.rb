@@ -22,6 +22,14 @@ module Sidekiq::Merger
       task.add_observer(observer)
       task
     end
+
+    def configure(&block)
+      yield config
+    end
+
+    def config
+      @config ||= Config.new
+    end
   end
 
   self.logger = Sidekiq.logger
