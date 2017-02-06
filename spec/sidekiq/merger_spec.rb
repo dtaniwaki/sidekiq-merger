@@ -12,7 +12,7 @@ describe Sidekiq::Merger do
     end
   end
   describe ".configure" do
-    it 'yields to the config' do
+    it "yields to the config" do
       expect { |b| described_class.configure(&b) }.to yield_with_args(described_class.config)
     end
   end
