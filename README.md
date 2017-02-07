@@ -6,7 +6,7 @@
 [![Coverage Status][cov-image]][cov-link]
 [![Code Climate][gpa-image]][gpa-link]
 
-![Docker](http://dockeri.co/image/dtaniwaki/sidekiq-merger)
+[![Docker][docker-hub-image]][docker-hub-link]
 
 Merge [sidekiq](http://sidekiq.org/) jobs occurring before the execution times. Inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
 
@@ -145,3 +145,5 @@ Copyright (c) 2017 dtaniwaki. See [LICENSE](LICENSE) for details.
 [cov-link]:    https://coveralls.io/r/dtaniwaki/sidekiq-merger
 [gpa-image]:   https://codeclimate.com/github/dtaniwaki/sidekiq-merger.svg
 [gpa-link]:    https://codeclimate.com/github/dtaniwaki/sidekiq-merger
+[docker-hub-image]: http://dockeri.co/image/dtaniwaki/sidekiq-merger
+[docker-hub-link]: https://hub.docker.com/r/dtaniwaki/sidekiq-merger/
