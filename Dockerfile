@@ -10,6 +10,4 @@ ADD . /gem
 WORKDIR /gem/app
 RUN bundle install -j4
 
-ENTRYPOINT ["/bin/bash", "-c"]
-
 EXPOSE $PORT
