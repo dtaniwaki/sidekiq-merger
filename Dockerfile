@@ -1,7 +1,7 @@
 FROM ruby:2.3.3
 MAINTAINER dtaniwaki
 
-ENV PORT ${PORT:-3000}
+ENV PORT 3000
 
 RUN gem install bundler
 ADD . /gem
@@ -10,4 +10,4 @@ RUN bundle install -j4
 
 ENTRYPOINT ["/bin/bash", "-c"]
 
-EXPOSE 3000
+EXPOSE $PORT
