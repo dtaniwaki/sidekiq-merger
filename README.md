@@ -10,6 +10,8 @@
 
 Merge [sidekiq](http://sidekiq.org/) jobs occurring before the execution times. Inspired by [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping).
 
+[Demo](http://sidekiq-merger.dtaniwaki.com/)
+
 ## Use Case
 
 ### Cancel Task
