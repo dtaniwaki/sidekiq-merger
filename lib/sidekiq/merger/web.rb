@@ -6,6 +6,7 @@ module Sidekiq::Merger::Web
   def self.registered(app)
     app.get "/merges" do
       @merges = Sidekiq::Merger::Merge.all
+      @merges.select! { |m| m.queue == params[:queue] } unless params[:queue].nil?
       erb File.read(File.join(VIEWS, "index.erb")), locals: { view_path: VIEWS }
     end
 
