@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <title>Sidekiq Merger</title>
+  <meta name="description" content="Merge sidekiq jobs occurring before the execution times. Inspired by sidekiq-grouping.">
 </head>
 <body>
   <header class="navbar">
@@ -21,7 +23,7 @@
     <p class="lead">
       Click the `perform_in` buttons to create or merge tasks until the execution time (in 60s).<br>
       Click the `perform_async` buttons to execute a single task.<br><br>
-      Open <a href="/sidekiq/merges?poll=true" target="_blank">sidekiq console</a> to check what happens.
+      Open <a href="<%= "/sidekiq/merges?queue=#{@queue}" %>" target="_blank">sidekiq console</a> to check what happens.
     </p>
     <div>
       <h2>SomeWorker</h2>
