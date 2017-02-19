@@ -13,6 +13,7 @@ env:
   - SIDEKIQ_VERSION=4.2.0
 services:
   - redis-server
+cache: bundler
 before_install:
   - gem update --system
   - gem --version
