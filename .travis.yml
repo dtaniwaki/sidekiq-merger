@@ -1,24 +1,18 @@
 sudo: false
 language: ruby
 rvm:
-  - 2.2.6
-  - 2.3.3
-  - 2.4.0
-env:
-  -
-  - SIDEKIQ_VERSION=3.4.0
-  - SIDEKIQ_VERSION=3.5.0
-  - SIDEKIQ_VERSION=4.0.0
-  - SIDEKIQ_VERSION=4.1.0
-  - SIDEKIQ_VERSION=4.2.0
+  - 2.3.7
+  - 2.4.4
+  - 2.5.1
+gemfile:
+  - gemfiles/sidekiq_4_0.gemfile
+  - gemfiles/sidekiq_4_1.gemfile
+  - gemfiles/sidekiq_4_2.gemfile
+  - gemfiles/sidekiq_5_0.gemfile
+  - gemfiles/sidekiq_5_1.gemfile
 services:
   - redis-server
 cache: bundler
-before_install:
-  - gem update --system
-  - gem --version
-  - gem update bundler
-  - bundler --version
 script:
   - "bundle exec rake spec"
   - "bundle exec rubocop -D"
