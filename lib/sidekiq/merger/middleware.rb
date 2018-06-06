@@ -9,13 +9,15 @@ class Sidekiq::Merger::Middleware
 
     merger_enabled = options.key?("merger")
 
-    if merger_enabled && !msg["at"].nil? && msg["at"].to_f > Time.now.to_f
+    return yield unless merger_enabled
+
+    if !msg["at"].nil? && msg["at"].to_f > Time.now.to_f
       Sidekiq::Merger::Merge
         .initialize_with_args(worker_class, queue, msg["args"])
         .add(msg["args"], msg["at"])
       false
     else
-      msg["args"] = [msg["args"]] unless msg.delete("merged")
+      msg["args"] = [msg["args"].flatten] unless msg.delete("merged")
       yield
     end
   end
