@@ -117,13 +117,13 @@ require "sidekiq/merger/web"
 
 ## Test
 
-    $ bundle exec rspec
+    $ bundle exec appraisal rspec
 
 The test coverage is available at `./coverage/index.html`.
 
 ## Lint
 
-    $ bundle exec rubocop
+    $ bundle exec appraisal rubocop
 
 ## Contributing
 

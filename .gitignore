@@ -9,6 +9,8 @@ tmp/
 rdoc/
 
 /Gemfile.lock
+#Appraisal
+*.gemfile.lock 
 
 *.gem
 *.rbc

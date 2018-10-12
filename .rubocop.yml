@@ -1,5 +1,7 @@
 AllCops:
   DisabledByDefault: true
+  Exclude:
+    - 'gemfiles/**/*'
 
 Style/StringLiterals:
   Enabled: true
