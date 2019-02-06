@@ -105,6 +105,14 @@ Format: `Boolean`
 
 e.g. `true`
 
+### `batch_size` (optional, default: `nil`)
+
+Allow to specify how many jobs max to provide as arguments per aggregation
+
+Format: `Int`
+
+e.g. `50`
+
 ## Web UI
 
 ![Web UI](misc/web_ui.png)

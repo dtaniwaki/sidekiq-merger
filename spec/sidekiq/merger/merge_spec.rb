@@ -141,19 +141,48 @@ describe Sidekiq::Merger::Merge, worker_class: true do
   end
 
   describe "#flush" do
-    before do
-      subject.add([1, 2, 3], execution_time)
-      subject.add([2, 3, 4], execution_time)
+    context "when no batch_size is configured" do
+      before do
+        subject.add([1, 2, 3], execution_time)
+        subject.add([2, 3, 4], execution_time)
+      end
+      it "flushes all the args" do
+        expect(Sidekiq::Client).to receive(:push).with(
+          "class" => worker_class,
+          "queue" => queue,
+          "args" => a_collection_containing_exactly([1, 2, 3], [2, 3, 4]),
+          "merged" => true
+        )
+  
+        subject.flush
+      end
     end
-    it "flushes all the args" do
-      expect(Sidekiq::Client).to receive(:push).with(
-        "class" => worker_class,
-        "queue" => queue,
-        "args" => a_collection_containing_exactly([1, 2, 3], [2, 3, 4]),
-        "merged" => true
-      )
 
-      subject.flush
+    context "when batch_size is configured to 2" do
+      let(:worker_options) { { key: -> (args) { args.to_json }, batch_size: 2 } }
+      before do
+        subject.add([1, 2, 3], execution_time)
+        subject.add([2, 3, 4], execution_time)
+        subject.add([3, 4, 5], execution_time)
+        subject.add([4, 5, 6], execution_time)
+      end
+      it "flushes all the args" do
+        expect(Sidekiq::Client).to receive(:push).with(
+          "class" => worker_class,
+          "queue" => queue,
+          "args" => a_collection_containing_exactly([1, 2, 3], [2, 3, 4]),
+          "merged" => true
+        )
+
+        expect(Sidekiq::Client).to receive(:push).with(
+          "class" => worker_class,
+          "queue" => queue,
+          "args" => a_collection_containing_exactly([3, 4, 5], [4, 5, 6]),
+          "merged" => true
+        )
+
+        subject.flush
+      end
     end
   end
 
