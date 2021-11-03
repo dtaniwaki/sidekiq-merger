@@ -73,12 +73,16 @@ class Sidekiq::Merger::Merge
     end
 
     unless msgs.empty?
-      Sidekiq::Client.push(
-        "class" => worker_class,
-        "queue" => queue,
-        "args" => msgs,
-        "merged" => true
-      )
+      batches = options[:batch_size].nil? ? [msgs] : msgs.each_slice(options[:batch_size].to_i).to_a
+      batches.each do |batch_msgs|
+        # preserve FIFO when enqueuing batches
+        Sidekiq::Client.push(
+          "class" => worker_class,
+          "queue" => queue,
+          "args" => batch_msgs,
+          "merged" => true
+        )
+      end
     end
   end
 
