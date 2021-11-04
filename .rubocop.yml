@@ -11,39 +11,42 @@ Style/StringLiteralsInInterpolation:
   Enabled: true
   EnforcedStyle: double_quotes
 
-Style/SpaceBeforeBlockBraces:
+Layout/SpaceBeforeBlockBraces:
   Enabled: true
   EnforcedStyle: 'space'
 
-Style/SpaceInsideBrackets:
+Layout/SpaceInsideArrayLiteralBrackets:
   Enabled: true
 
-Style/SpaceInsideHashLiteralBraces:
+Layout/SpaceInsideReferenceBrackets:
   Enabled: true
 
-Style/SpaceInsideBlockBraces:
+Layout/SpaceInsideHashLiteralBraces:
   Enabled: true
 
-Style/SpaceAroundEqualsInParameterDefault:
+Layout/SpaceInsideBlockBraces:
   Enabled: true
 
-Style/SpaceBeforeComma:
+Layout/SpaceAroundEqualsInParameterDefault:
+  Enabled: true
+
+Layout/SpaceBeforeComma:
   Enabled: false
 
-Style/SpaceAroundOperators:
+Layout/SpaceAroundOperators:
   Enabled: true
 
-Style/SpaceAfterComma:
+Layout/SpaceAfterComma:
   Enabled: true
 
-Style/ExtraSpacing:
+Layout/ExtraSpacing:
   Enabled: true
   AllowForAlignment: true
 
 Lint/DuplicateMethods:
   Enabled: true
 
-Metrics/LineLength:
+Layout/LineLength:
   Enabled: true
   Max: 200
   AllowHeredoc: true
@@ -67,16 +70,13 @@ Style/ClassAndModuleChildren:
   Exclude:
     - lib/sidekiq/merger/version.rb
 
-Rails/PluralizationGrammar:
+Layout/ArrayAlignment:
   Enabled: true
 
-Style/AlignArray:
+Layout/HashAlignment:
   Enabled: true
 
-Style/AlignHash:
-  Enabled: true
-
-Style/BlockEndNewline:
+Layout/BlockEndNewline:
   Enabled: false
 
 Style/DoubleNegation:

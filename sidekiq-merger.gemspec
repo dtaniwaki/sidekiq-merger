@@ -22,13 +22,13 @@ Gem::Specification.new do |spec|
   spec.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = [">= 2.2.2", "< 2.6"]
+  spec.required_ruby_version = [">= 2.5.0"]
 
   spec.add_development_dependency "rake", ">= 10.0", "< 13"
   spec.add_development_dependency "rspec", ">= 3.0", "< 4"
   spec.add_development_dependency "simplecov", "~> 0.12"
   spec.add_development_dependency "timecop", "~> 0.8"
-  spec.add_development_dependency "rubocop", "~> 0.47"
+  spec.add_development_dependency "rubocop", "~> 0.93.1"
   spec.add_development_dependency "coveralls", "~> 0.8"
   spec.add_development_dependency "appraisal"
 
