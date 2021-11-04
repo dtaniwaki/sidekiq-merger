@@ -41,6 +41,9 @@ RSpec.configure do |config|
     Sidekiq::Testing.fake!
     Sidekiq::Merger.logger = nil
     Sidekiq.logger = nil
+    if Redis.respond_to?(:exists_returns_integer)
+      Redis.exists_returns_integer = false
+    end
   end
 
   config.around :example do |example|
