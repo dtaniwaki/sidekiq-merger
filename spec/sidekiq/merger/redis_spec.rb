@@ -196,6 +196,7 @@ describe Sidekiq::Merger::Redis do
     it "locks the key" do
       subject.lock_merge("foo", 3)
       subject.redis do |conn|
+        Redis.exists_returns_integer = false
         expect(conn.exists("sidekiq-merger:lock:foo")).to eq true
       end
     end
